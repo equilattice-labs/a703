@@ -1,0 +1,14 @@
+﻿
+> robinhood-pulse-web@1.0.0 build
+> vite build
+
+vite v8.3.0 building client environment for production...
+transforming...
+✓ 158 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                   0.42 kB │ gzip:   0.30 kB
+dist/assets/index-BUUq7trX.css   11.18 kB │ gzip:   3.50 kB
+dist/assets/index-DH7hfhsU.js   331.77 kB │ gzip: 124.01 kB
+
+✓ built in 383ms
