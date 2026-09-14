@@ -1,8 +1,9 @@
-Deedluma
-Twitter: @Deedluma
-Domain: deedluma.xyz
+﻿Partivio
+Twitter: https://x.com/Partivio
+Domain: partivio.xyz
 Contract address: configure VITE_TOKEN_CONTRACT_ADDRESS in .env after deployment.
 Network: RobinHood Chain Testnet (chain id 46630)
 
 Official RPC URL: https://rpc.testnet.chain.robinhood.com/rpc
 Explorer: https://explorer.testnet.chain.robinhood.com
+

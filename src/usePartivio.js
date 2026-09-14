@@ -1,4 +1,4 @@
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+﻿import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { BrowserProvider, Contract, JsonRpcProvider, parseUnits, formatUnits, isAddress, ZeroAddress } from 'ethers'
 import { ABI, CONTRACT_ADDRESS, NETWORK, CHAIN_ID, RPC_URL, EXPLORER_URL, DEPLOYMENT_BLOCK } from './contract'
 
@@ -10,7 +10,7 @@ const ERRORS = {
   OwnableUnauthorizedAccount: 'Only the contract owner can perform this action.', ERC20InsufficientBalance: 'Your DLU balance is too low.',
   ProofNotApproved: 'The steward must approve your contribution before you can claim.'
 }
-export function useDeedluma() {
+export function usePartivio() {
   const configured = isAddress(CONTRACT_ADDRESS) && CONTRACT_ADDRESS !== ZeroAddress
   const rpc = new JsonRpcProvider(RPC_URL, CHAIN_ID, { staticNetwork: true, batchMaxCount: 10 })
   const contract = configured ? new Contract(CONTRACT_ADDRESS, ABI, rpc) : null
@@ -93,7 +93,7 @@ export function useDeedluma() {
           contract.nextQuestId(), contract.nextProposalId(), contract.owner(), contract.totalSupply(), contract.balanceOf(CONTRACT_ADDRESS), contract.APR_BPS(), contract.paused(), rpc.getBlockNumber()
         ])
         owner.value = ownerAddress; totalSupply.value = supply; totalStaked.value = reserve; apr.value = rate; paused.value = isPaused
-        // Treasury is explicit in new deployments; legacy deployments use the owner as treasury.
+        // Treasury is explicit in current deployments; earlier deployments use the owner as treasury.
         treasury.value = contract.interface.hasFunction('treasury') ? await contract.treasury().catch(() => ownerAddress) : ownerAddress
         const [treasuryTokens, treasuryEth, questRows, proposalRows] = await Promise.all([
           contract.balanceOf(treasury.value), rpc.getBalance(treasury.value),
@@ -187,3 +187,4 @@ export function useDeedluma() {
   onUnmounted(() => { clearInterval(timer); injected?.removeListener?.('accountsChanged', accountsChanged); injected?.removeListener?.('chainChanged', chainChanged); rpc.destroy() })
   return { configured, wallet, chain, token, native, owner, treasury, totalSupply, treasuryBalance, treasuryNative, totalStaked, apr, paused, quests, proposals, activity, eventsError, accountError, readError, reading, ready, lastRead, connected, wrongChain, isOwner, busy, canWrite, unlocked, position, txState, connecting, short, units, exact, date, explorer, readableError, notify, refresh, connect, switchNetwork, transact, questStatus, proposalStatus, votePercent, parseAmount }
 }
+
