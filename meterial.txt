@@ -1,9 +1,18 @@
-﻿Partivio
-Twitter: https://x.com/Partivio
-Domain: partivio.xyz
-Contract address: configure VITE_TOKEN_CONTRACT_ADDRESS in .env after deployment.
-Network: RobinHood Chain Testnet (chain id 46630)
+Kinacta
+Positioning: A shared workspace for community action.
+Brand slug: kinacta
+Uppercase brand: KINACTA (not a token symbol)
+Candidate X handle: @Kinacta — ownership unconfirmed; not an official link.
+Candidate domain: kinacta.xyz — ownership unconfirmed; not an official launch destination.
 
-Official RPC URL: https://rpc.testnet.chain.robinhood.com/rpc
+Product: community quests, testnet staking, advisory proposals, and treasury visibility.
+Visual identity: warm ivory, ink, electric lime; a clear community workspace.
+Network: Robinhood Chain Testnet (chain ID 46630)
+RPC URL: https://rpc.testnet.chain.robinhood.com/rpc
 Explorer: https://explorer.testnet.chain.robinhood.com
 
+Contract configuration: preserve VITE_TOKEN_CONTRACT_ADDRESS. A new installation must configure its intended deployment before sending transactions.
+Token labels: read name() and symbol() from the configured contract. Application branding does not rename that token or its permit signing domain.
+Local source identity: Deedluma / DLU. Recorded configured deployment identity: Robinhood Impact / RHI; see output/branding/rebrand-inventory.md for dated evidence.
+No new Kinacta deployment or token issuance is asserted. An unconfigured app displays explicitly labeled samples.
+Governance votes are advisory and do not automatically transfer treasury funds. Test tokens have no promised monetary value or returns.
