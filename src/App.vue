@@ -516,7 +516,7 @@ function eventDescription(e) {
       <div v-if="wrongChain" class="notice warning-notice" role="alert">
         <Icon name="info" />
         <p>
-          Your wallet is on another network. Read data is from Robinhood Chain
+          Your wallet is on another network. Read data is from Arc Chain
           Testnet.
         </p>
         <button
@@ -959,7 +959,7 @@ function eventDescription(e) {
                 {{
                   q.sample
                     ? q.detail
-                    : "An open participation reward. Claiming is recorded on Robinhood Chain. No off-chain work is verified by this claim."
+                    : "An open participation reward. Claiming is recorded on Arc Chain. No off-chain work is verified by this claim."
                 }}
               </p>
               <div class="quest-reward">
@@ -1172,7 +1172,7 @@ function eventDescription(e) {
                   >
                 </div>
                 <div>
-                  <span>Network gas</span><span>Paid in testnet ETH</span>
+                  <span>Network gas</span><span>Paid in testnet USDC</span>
                 </div>
               </div>
               <div class="form-note">
@@ -1246,7 +1246,7 @@ function eventDescription(e) {
                 </div>
                 <div v-if="connected" class="position-detail">
                   <span>Gas balance</span
-                  ><b>{{ accountReady ? units(native, 6) : "?" }} ETH</b>
+                  ><b>{{ accountReady ? units(native, 6) : "?" }} USDC</b>
                 </div>
                 <button
                   v-if="!connected"
@@ -1516,7 +1516,7 @@ function eventDescription(e) {
               <h1>Every move, in the open.</h1>
               <p>
                 A shared ledger, open to everyone. Follow balances and recent
-                contract activity directly from Robinhood Chain.
+                contract activity directly from Arc Chain.
               </p>
             </div>
             <span class="page-stamp"><Icon name="treasury" :size="35" /></span>
@@ -1535,7 +1535,7 @@ function eventDescription(e) {
                 <span>Treasury gas balance</span
                 ><strong
                   >{{ ready && treasuryKnown ? units(treasuryNative, 6) : "—" }}
-                  <small>Testnet ETH</small></strong
+                  <small>Testnet USDC</small></strong
                 >
               </div>
             </article>
@@ -1606,7 +1606,7 @@ function eventDescription(e) {
                 </div>
                 <div>
                   <dt>Network</dt>
-                  <dd>Robinhood Chain Testnet</dd>
+                  <dd>Arc Chain Testnet</dd>
                 </div>
                 <div>
                   <dt>Chain ID</dt>
@@ -1690,17 +1690,17 @@ function eventDescription(e) {
               <span class="eyebrow">YOUR FIRST FIVE MINUTES</span>
               <h2>A wallet. A little testnet gas. An open quest.</h2>
               <p>
-                Connect an EVM wallet, switch to Robinhood Chain Testnet, and
-                get testnet ETH for gas. Then explore an open quest and review
+                Connect an EVM wallet, switch to Arc Chain Testnet, and
+                get testnet USDC for gas. Then explore an open quest and review
                 its reward before you confirm.
               </p>
             </div>
             <a
               class="primary"
-              href="https://faucet.testnet.chain.robinhood.com"
+              href="https://faucet.circle.com"
               target="_blank"
               rel="noopener noreferrer"
-              >Get testnet ETH <Icon name="external" :size="18"
+              >Get testnet USDC <Icon name="external" :size="18"
             /></a>
           </div>
           <div class="learn-grid">
@@ -1790,11 +1790,11 @@ function eventDescription(e) {
                 </p>
               </details>
               <details>
-                <summary>Is Ralliva an official Robinhood product?</summary>
+                <summary>Is Ralliva an official Arc Chain product?</summary>
                 <p>
                   No. Ralliva is an independent community project built on
-                  Robinhood Chain Testnet. It is not affiliated with or endorsed
-                  by Robinhood Markets.
+                  Arc Chain Testnet. It is not affiliated with or endorsed
+                  by Circle.
                 </p>
               </details>
               <details>
@@ -1817,7 +1817,7 @@ function eventDescription(e) {
         <span
           >© 2026 Ralliva <span class="footer-separator">/</span> Small actions.
           Common ground.</span
-        ><span>Robinhood Chain Testnet · Independent community project</span>
+        ><span>Arc Chain Testnet · Independent community project</span>
       </footer>
     </div>
     <aside

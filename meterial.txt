@@ -8,12 +8,17 @@ Candidate domain: ralliva.xyz — ownership unconfirmed; not an official launch 
 
 Product: community quests, testnet staking, advisory proposals, and treasury visibility.
 Visual identity: midnight #10121c, panel #191d2b, mint #b9f5d0, periwinkle #a9a0ff; a community coordination workspace.
-Network: Robinhood Chain Testnet (chain ID 46630)
-RPC URL: https://rpc.testnet.chain.robinhood.com/rpc
-Explorer: https://explorer.testnet.chain.robinhood.com
+Network: Arc Chain Testnet (chain ID 5042002)
+RPC URL: https://rpc.testnet.arc.io
+Explorer: https://explorer.testnet.arc.io
+Native gas currency: USDC (18 native decimals; ERC-20 USDC uses 6 decimals).
+Contract: 0x4abB3B303B47602B44426Ab1e365D15AcDA3193A
+Deployment block: 62360289
+Owner / treasury: 0x267e59E72F6b432ddDC67ca856B7da36F38efeF4
+Deployment record: contracts/deployments/arcTestnet.json
 
-Contract configuration: preserve VITE_TOKEN_CONTRACT_ADDRESS. A new installation must configure its intended deployment before sending transactions.
+Contract configuration: set VITE_TOKEN_CONTRACT_ADDRESS to the new Arc Chain Testnet deployment. A new installation must configure its intended deployment before sending transactions.
 Token labels: read name() and symbol() from the configured contract. Application branding does not rename that token or its permit signing domain.
-Local source identity: Deedluma / DLU. Recorded configured deployment identity: Robinhood Impact / RHI. The app reads the configured contract's actual name and symbol.
-No new Ralliva deployment or token issuance is asserted. An unconfigured app displays explicitly labeled samples.
+Local source and Arc deployment identity: Deedluma / DLU. The app reads the configured contract's actual name and symbol.
+Ralliva is the application brand; the migrated contract remains Deedluma / DLU and starts with fresh testnet state. An unconfigured app displays explicitly labeled samples.
 Governance votes are advisory and do not automatically transfer treasury funds. Test tokens have no promised monetary value or returns.
