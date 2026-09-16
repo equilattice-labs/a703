@@ -1,4 +1,4 @@
-﻿import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { BrowserProvider, Contract, JsonRpcProvider, parseUnits, formatUnits, isAddress, ZeroAddress } from 'ethers'
 import { ABI, CONTRACT_ADDRESS, TREASURY_ADDRESS, NETWORK, CHAIN_ID, RPC_URL, EXPLORER_URL, DEPLOYMENT_BLOCK } from './contract'
 
@@ -10,7 +10,7 @@ const ERRORS = {
   OwnableUnauthorizedAccount: 'Only the contract owner can perform this action.',
   ProofNotApproved: 'The steward must approve your contribution before you can claim.'
 }
-export function useKinacta() {
+export function useRalliva() {
   const configured = isAddress(CONTRACT_ADDRESS) && CONTRACT_ADDRESS !== ZeroAddress
   const rpc = new JsonRpcProvider(RPC_URL, CHAIN_ID, { staticNetwork: true, batchMaxCount: 10 })
   const contract = configured ? new Contract(CONTRACT_ADDRESS, ABI, rpc) : null

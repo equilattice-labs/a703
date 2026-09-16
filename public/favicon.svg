@@ -1,9 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="none">
-  <title>Kinacta</title>
-  <rect width="128" height="128" rx="28" fill="#d5f46b"/>
-  <g fill="#20251d" transform="translate(14 14) scale(.78125)">
-    <polygon points="16,16 39,16 39,112 16,112"/>
-    <polygon points="47,61 86,16 115,16 75,61"/>
-    <polygon points="47,68 77,68 117,112 86,112"/>
+  <title>Ralliva</title>
+  <rect width="128" height="128" rx="29" fill="#10121c"/>
+  <g stroke-width="14" stroke-linecap="round" stroke-linejoin="round" transform="translate(9 9) scale(.859375)">
+    <path d="M 29 103 L 29 43 C 29 29 40 21 55 21 L 69 21 C 86 21 99 32 99 47 C 99 62 87 73 72 73 L 55 73" stroke="#b9f5d0"/>
+    <path d="M 55 73 C 75 73 88 90 100 104" stroke="#a9a0ff"/>
   </g>
 </svg>
