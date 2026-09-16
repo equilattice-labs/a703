@@ -1,11 +1,11 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, nextTick, watch } from "vue";
-import { useRalliva } from "./useRalliva";
+import { useQuorivana } from "./useQuorivana";
 import { CHAIN_ID, CONTRACT_ADDRESS } from "./contract";
-import rallivaMark from "./assets/ralliva-mark.svg";
+import quorivanaMark from "./assets/quorivana-mark.svg";
 import Icon from "./Icon.vue";
 
-const ralliva = useRalliva();
+const quorivana = useQuorivana();
 const {
   configured,
   wallet,
@@ -56,7 +56,7 @@ const {
   proposalStatus,
   votePercent,
   parseAmount,
-} = ralliva;
+} = quorivana;
 const mobileMenu = ref(false);
 const validTabs = [
   "home",
@@ -118,7 +118,7 @@ const samples = [
   {
     id: "sample-1",
     sample: true,
-    title: "Read the Ralliva charter",
+    title: "Read the Quorivana charter",
     reward: 12n * 10n ** 18n,
     detail: "A sample welcome quest. Learn how rewards and stewardship work.",
   },
@@ -151,9 +151,12 @@ const sampleProposals = [
 const search = ref("");
 const draftSaved = ref(false);
 try {
-  const draft = JSON.parse(
-    sessionStorage.getItem("ralliva-proposal-draft") || "null",
-  );
+  const draftKey = "quorivana-proposal-draft";
+  // Preserve an unfinished draft from the previous application brand once.
+  const legacyDraftKey = "ralliva-proposal-draft";
+  const savedDraft = sessionStorage.getItem(draftKey);
+  const legacyDraft = savedDraft ? null : sessionStorage.getItem(legacyDraftKey);
+  const draft = JSON.parse(savedDraft || legacyDraft || "null");
   if (draft && typeof draft.text === "string") {
     proposalText.value = draft.text.slice(0, 2000);
     proposalDays.value =
@@ -161,6 +164,12 @@ try {
         ? draft.days
         : 7;
     draftSaved.value = true;
+    if (legacyDraft) {
+      sessionStorage.setItem(draftKey, JSON.stringify({ text: proposalText.value, days: proposalDays.value }));
+    }
+    // Remove obsolete storage even when a newer draft already takes precedence.
+    // Otherwise clearing the current draft could resurrect stale legacy text.
+    sessionStorage.removeItem(legacyDraftKey);
   }
 } catch {
   /* Draft persistence is optional when browser storage is unavailable. */
@@ -169,10 +178,10 @@ watch([proposalText, proposalDays], ([text, days]) => {
   try {
     if (text.trim())
       sessionStorage.setItem(
-        "ralliva-proposal-draft",
+        "quorivana-proposal-draft",
         JSON.stringify({ text, days: Number(days) }),
       );
-    else sessionStorage.removeItem("ralliva-proposal-draft");
+    else sessionStorage.removeItem("quorivana-proposal-draft");
     draftSaved.value = Boolean(text.trim());
   } catch {
     draftSaved.value = false;
@@ -440,9 +449,9 @@ function eventDescription(e) {
     >
     <header class="site-header" @keydown.esc="closeMenu">
       <div class="header-inner">
-        <button class="brand" aria-label="Ralliva home" @click="go('home')">
-          <img :src="rallivaMark" width="36" height="36" alt="" /><span
-            >ralliva</span
+        <button class="brand" aria-label="Quorivana home" @click="go('home')">
+          <img :src="quorivanaMark" width="36" height="36" alt="" /><span
+            >quorivana</span
           >
         </button>
         <nav
@@ -458,7 +467,7 @@ function eventDescription(e) {
             :aria-current="tab === n[0] ? 'page' : undefined"
             @click="go(n[0])"
           >
-            <Icon :name="n[0]" :size="17" /><span>{{ n[1] }}</span>
+            <span>{{ n[1] }}</span>
           </button>
         </nav>
         <div class="topbar-actions">
@@ -587,153 +596,45 @@ function eventDescription(e) {
 
         <section v-if="tab === 'home'" class="overview">
           <div class="section-intro">
-            <span class="eyebrow"
-              ><span class="status-dot"></span> THE COMMUNITY, IN MOTION</span
-            ><span class="edition">RALLIVA COLLECTIVE / TESTNET</span>
+            <span class="eyebrow"><span class="status-dot"></span> A WORKSPACE FOR SHARED PROGRESS</span>
+            <span class="edition">QUORIVANA / FIELD NOTES 001</span>
           </div>
           <div class="hero">
             <div class="hero-copy">
-              <div class="hero-tag">
-                <span class="hero-tag-symbol">✳</span> A LITTLE ACTION GOES A
-                LONG WAY
-              </div>
-              <h1>
-                Find your part.<br />Move us
-                <span class="highlight">forward.</span>
+              <h1 aria-label="Every contribution. A common direction.">
+                Every<br />contribution.<br />
+                <span class="highlight">A common<br />direction.</span>
               </h1>
-              <p>
-                Your ideas, your energy, our next chapter.<br
-                  class="desktop-break"
-                />
-                Explore quests and shape what we do together.
-              </p>
+              <p>A home for useful work. Find a quest, explore test-token commitments, and help decide what comes next.</p>
               <div class="hero-actions">
-                <button class="primary" @click="go('quests')">
-                  Explore quests <Icon :size="18" /></button
-                ><button class="secondary-link" @click="go('learn')">
-                  <span class="play-symbol">↗</span> How Ralliva works
-                </button>
+                <button class="primary" @click="go('quests')">Find your first quest <Icon :size="19" /></button>
+                <button class="secondary-link" @click="go('learn')">Read the guide <Icon name="external" :size="17" /></button>
               </div>
-              <div class="hero-bottom">
-                <span class="member-symbols" aria-hidden="true"
-                  ><i>✳</i><i>↗</i><i>+</i></span
-                ><span
-                  >Every contribution has a place.<br /><b
-                    >Yours could be next.</b
-                  ></span
-                >
-              </div>
+              <div class="hero-bottom"><span class="small-cross" aria-hidden="true">+</span><span>Independent voices.<br /><b>One shared direction.</b></span></div>
             </div>
             <div class="hero-art" aria-hidden="true">
-              <svg class="orbit-art" viewBox="0 0 540 450" fill="none">
-                <defs>
-                  <radialGradient id="orbit-glow">
-                    <stop stop-color="#6763bb" stop-opacity=".32" />
-                    <stop offset="1" stop-color="#10121c" stop-opacity="0" />
-                  </radialGradient>
-                  <linearGradient
-                    id="orbit-line"
-                    x1="100"
-                    y1="330"
-                    x2="430"
-                    y2="100"
-                    gradientUnits="userSpaceOnUse"
-                  >
-                    <stop stop-color="#b9f5d0" />
-                    <stop offset=".5" stop-color="#a9a0ff" />
-                    <stop offset="1" stop-color="#a9a0ff" stop-opacity=".2" />
-                  </linearGradient>
-                </defs>
-                <ellipse
-                  cx="270"
-                  cy="220"
-                  rx="260"
-                  ry="210"
-                  fill="url(#orbit-glow)"
-                />
-                <g stroke="#77739a" stroke-opacity=".26">
-                  <circle cx="270" cy="215" r="170" stroke-dasharray="2 8" />
-                  <circle cx="270" cy="215" r="118" />
-                  <path d="M30 215h480M270 14v410" stroke-dasharray="2 7" />
-                </g>
-                <g transform="rotate(-30 270 215)">
-                  <ellipse
-                    cx="270"
-                    cy="215"
-                    rx="218"
-                    ry="87"
-                    stroke="url(#orbit-line)"
-                    stroke-width="1.5"
-                  />
-                  <ellipse
-                    cx="270"
-                    cy="215"
-                    rx="87"
-                    ry="188"
-                    stroke="url(#orbit-line)"
-                    stroke-width="1.5"
-                  />
-                  <circle cx="52" cy="215" r="6" fill="#b9f5d0" />
-                  <circle cx="270" cy="27" r="5" fill="#a9a0ff" />
-                </g>
-                <circle
-                  cx="270"
-                  cy="215"
-                  r="68"
-                  fill="#1c2032"
-                  stroke="#514f6a"
-                />
-                <circle
-                  cx="270"
-                  cy="215"
-                  r="59"
-                  stroke="#a9a0ff"
-                  stroke-opacity=".22"
-                />
-                <circle cx="409" cy="313" r="4" fill="#b9f5d0" />
-                <path
-                  d="M99 100v14m-7-7h14M431 79v12m-6-6h12M326 392v10m-5-5h10"
-                  stroke="#a9a0ff"
-                />
+              <div class="art-topline"><span>THE PARTICIPATION LOOP</span><span>+</span></div>
+              <svg class="contribution-art" viewBox="0 0 480 400" fill="none">
+                <g stroke="currentColor" stroke-width="1" opacity=".15"><path d="M0 80h480M0 160h480M0 240h480M0 320h480M80 0v400M160 0v400M240 0v400M320 0v400M400 0v400"/></g>
+                <path d="M80 316V168h94v-68h130v98h96v-46" stroke="currentColor" stroke-width="40" stroke-linejoin="miter"/>
+                <path d="m354 173 46-47 46 47" stroke="currentColor" stroke-width="18"/>
+                <path d="M174 284h130V198" stroke="currentColor" stroke-width="2" stroke-dasharray="5 7"/>
+                <circle cx="80" cy="316" r="31" fill="#d4e09b" stroke="currentColor" stroke-width="2"/>
+                <path d="M69 316h22m-11-11v22" stroke="currentColor" stroke-width="2"/>
+                <circle cx="174" cy="284" r="7" fill="currentColor"/>
+                <path d="m230 82 10-14 10 14M240 68v38" stroke="#fffefa" stroke-width="2"/>
+                <path d="m329 240 11-11 11 11m-11-11v38" stroke="currentColor" stroke-width="1.5"/>
               </svg>
-              <img
-                class="orbit-mark"
-                :src="rallivaMark"
-                width="74"
-                height="74"
-                alt=""
-              />
-              <div class="orbit-node node-contribute">
-                <span class="node-icon"><Icon name="quests" :size="20" /></span>
-                <div>
-                  <small>01 / CONTRIBUTE</small
-                  ><strong>One small action</strong>
-                </div>
-                <span class="node-dot"></span>
-              </div>
-              <div class="orbit-node node-coordinate">
-                <span class="node-icon"
-                  ><Icon name="governance" :size="20"
-                /></span>
-                <div>
-                  <small>02 / COORDINATE</small
-                  ><strong>A shared direction</strong>
-                </div>
-              </div>
-              <span class="orbit-caption"
-                >INDEPENDENT VOICES. CONNECTED PURPOSE.</span
-              >
+              <div class="art-label label-one"><span>01</span> CONTRIBUTE</div>
+              <div class="art-label label-two"><span>02</span> COMMIT</div>
+              <div class="art-label label-three"><span>03</span> COORDINATE</div>
+              <div class="art-caption"><span>Progress is a team sport.</span><img :src="quorivanaMark" width="28" height="28" alt="" /></div>
             </div>
           </div>
           <div class="journey-strip">
-            <span class="tiny-label">MAKE IT YOURS</span
-            ><button @click="go('quests')">
-              <span>01</span> Pick a quest <Icon :size="16" /></button
-            ><button @click="go('stake')">
-              <span>02</span> Make a commitment <Icon :size="16" /></button
-            ><button @click="go('governance')">
-              <span>03</span> Shape what’s next <Icon :size="16" />
-            </button>
+            <button @click="go('quests')"><span>01</span><div><strong>Contribute</strong><small>Find your next quest</small></div><Icon :size="20" /></button>
+            <button @click="go('stake')"><span>02</span><div><strong>Commit</strong><small>Build a staking position</small></div><Icon :size="20" /></button>
+            <button @click="go('governance')"><span>03</span><div><strong>Coordinate</strong><small>Help choose a direction</small></div><Icon :size="20" /></button>
           </div>
           <div class="stats-strip">
             <div>
@@ -781,7 +682,7 @@ function eventDescription(e) {
           <div class="section-heading">
             <div>
               <span class="eyebrow">YOUR NEXT CONTRIBUTION</span>
-              <h2>A place to put your energy.</h2>
+              <h2>The work starts with you.</h2>
             </div>
             <button class="text-button" @click="go('quests')">
               View all quests <Icon :size="18" />
@@ -831,9 +732,9 @@ function eventDescription(e) {
             </div>
             <article class="commons-card">
               <Icon name="spark" :size="30" /><span class="tiny-label"
-                >THE OPEN COLLECTIVE</span
+                >SHARED RESOURCES, OPEN RECORDS</span
               >
-              <h2>Built together.<br />Open to everyone.</h2>
+              <h2>A clear view.<br />A common purpose.</h2>
               <p>
                 Shared resources deserve a clear view. Follow the treasury and
                 see the story behind each transaction.
@@ -849,7 +750,7 @@ function eventDescription(e) {
           <div class="page-head">
             <div>
               <span class="eyebrow">01 / CONTRIBUTE</span>
-              <h1>Good work starts here.</h1>
+              <h1>Find your next contribution.</h1>
               <p>
                 Explore open quests, check the rules, and claim a testnet
                 reward. One claim per wallet, within each quest’s cap and
@@ -930,93 +831,23 @@ function eventDescription(e) {
             </button>
           </div>
           <div class="quest-grid">
-            <article
-              v-for="(q, index) in visibleQuests"
-              :key="q.id"
-              class="quest-card"
-              :id="'quest-' + q.id"
-              :aria-labelledby="'quest-title-' + q.id"
-              tabindex="-1"
-            >
-              <div class="quest-card-top">
-                <span class="quest-emblem" :class="'emblem-' + (index % 3)"
-                  ><Icon
-                    :name="['learn', 'spark', 'treasury'][index % 3]"
-                    :size="28" /></span
-                ><span
-                  class="badge"
-                  :class="{ open: questStatus(q) === 'Open' }"
-                  >{{ questStatus(q) }}</span
-                >
-              </div>
-              <span class="tiny-label">{{
-                q.sample
-                  ? "EXAMPLE / 0" + (index + 1)
-                  : "QUEST / " + String(q.id).padStart(3, "0")
-              }}</span>
-              <h2 :id="'quest-title-' + q.id">{{ q.title }}</h2>
-              <p>
-                {{
-                  q.sample
-                    ? q.detail
-                    : "An open participation reward. Claiming is recorded on Robinhood Chain. No off-chain work is verified by this claim."
-                }}
-              </p>
-              <div class="quest-reward">
-                <span>Reward <small v-if="q.sample">· example</small></span
-                ><strong
-                  >{{ units(q.reward) }}
-                  <small>{{ tokenSymbol }}</small></strong
-                >
-              </div>
-              <div v-if="!q.sample" class="quest-cap">
-                <div>
-                  <span
-                    >{{ q.claims.toLocaleString() }} /
-                    {{ q.maxClaims.toLocaleString() }} claimed</span
-                  ><span
-                    >{{
-                      Math.max(0, q.maxClaims - q.claims).toLocaleString()
-                    }}
-                    left</span
-                  >
+            <article v-for="(q, index) in visibleQuests" :key="q.id" class="quest-card" :id="'quest-' + q.id" :aria-labelledby="'quest-title-' + q.id" tabindex="-1">
+              <div class="quest-index"><span>{{ String(index + 1).padStart(2, "0") }}</span><Icon :name="['learn', 'spark', 'treasury'][index % 3]" :size="24" /></div>
+              <div class="quest-main">
+                <div class="quest-card-top"><span class="tiny-label">{{ q.sample ? "EXAMPLE QUEST" : "QUEST / " + String(q.id).padStart(3, "0") }}</span><span class="badge" :class="{ open: questStatus(q) === 'Open' }">{{ questStatus(q) }}</span></div>
+                <h2 :id="'quest-title-' + q.id">{{ q.title }}</h2>
+                <p>{{ q.sample ? q.detail : "An open participation reward. Claiming is recorded on Robinhood Chain. No off-chain work is verified by this claim." }}</p>
+                <div v-if="!q.sample" class="quest-cap">
+                  <div><span>{{ q.claims.toLocaleString() }} / {{ q.maxClaims.toLocaleString() }} claimed</span><span>{{ Math.max(0, q.maxClaims - q.claims).toLocaleString() }} left</span></div>
+                  <progress :value="q.claims" :max="q.maxClaims || 1" :aria-label="q.claims + ' of ' + q.maxClaims + ' claims used'"></progress>
+                  <span><Icon name="clock" :size="14" /> Closes {{ date(q.expiresAt) }}</span>
                 </div>
-                <progress
-                  :value="q.claims"
-                  :max="q.maxClaims || 1"
-                  :aria-label="q.claims + ' of ' + q.maxClaims + ' claims used'"
-                ></progress
-                ><span
-                  ><Icon name="clock" :size="14" /> Closes
-                  {{ date(q.expiresAt) }}</span
-                >
               </div>
-              <button
-                class="outline wide"
-                :disabled="
-                  actionDisabled || (!q.sample && questStatus(q) !== 'Open')
-                "
-                @click="claim(q)"
-              >
-                {{
-                  q.sample
-                    ? "Preview quest"
-                    : q.claimed
-                      ? "Already claimed"
-                      : questStatus(q) !== "Open"
-                        ? questStatus(q)
-                        : connected
-                          ? "Claim reward"
-                          : "Connect to claim"
-                }}<Icon :size="18" /></button
-              ><button
-                v-if="isOwner && !q.sample"
-                class="text-button steward-action"
-                :disabled="busy"
-                @click="setQuest(q)"
-              >
-                {{ q.active ? "Pause quest" : "Resume quest" }}
-              </button>
+              <div class="quest-action">
+                <div class="quest-reward"><span>Reward <small v-if="q.sample">· example</small></span><strong>{{ units(q.reward) }} <small>{{ tokenSymbol }}</small></strong></div>
+                <button class="outline wide" :disabled="actionDisabled || (!q.sample && questStatus(q) !== 'Open')" @click="claim(q)">{{ q.sample ? "Preview quest" : q.claimed ? "Already claimed" : questStatus(q) !== "Open" ? questStatus(q) : connected ? "Claim reward" : "Connect to claim" }}<Icon :size="18" /></button>
+                <button v-if="isOwner && !q.sample" class="text-button steward-action" :disabled="busy" @click="setQuest(q)">{{ q.active ? "Pause quest" : "Resume quest" }}</button>
+              </div>
             </article>
           </div>
           <form
@@ -1033,7 +864,7 @@ function eventDescription(e) {
                   v-model="adminTitle"
                   maxlength="200"
                   required
-                  placeholder="Welcome to Ralliva" /></label
+                  placeholder="Welcome to Quorivana" /></label
               ><label
                 >Reward ({{ tokenSymbol }})<input
                   v-model="adminReward"
@@ -1069,7 +900,7 @@ function eventDescription(e) {
           <div class="page-head">
             <div>
               <span class="eyebrow">02 / COMMIT</span>
-              <h1>Give your commitment time.</h1>
+              <h1>Put time behind your conviction.</h1>
               <p>
                 Choose how much to commit and for how long. Your principal stays
                 in the contract until its lock ends and you withdraw it.
@@ -1306,7 +1137,7 @@ function eventDescription(e) {
           <div class="page-head">
             <div>
               <span class="eyebrow">03 / COORDINATE</span>
-              <h1>Our next chapter is open.</h1>
+              <h1>Make the next move, together.</h1>
               <p>
                 Bring an idea to the table. Read the proposals and make your
                 voice count. Votes are advisory; treasury spending is a separate
@@ -1409,7 +1240,7 @@ function eventDescription(e) {
               {{
                 readError
                   ? "Use Try again above to reconnect."
-                  : "Start the first Ralliva discussion with a clear idea and a voting period."
+                  : "Start the first Quorivana discussion with a clear idea and a voting period."
               }}
             </p>
             <button
@@ -1513,7 +1344,7 @@ function eventDescription(e) {
           <div class="page-head">
             <div>
               <span class="eyebrow">04 / VERIFY</span>
-              <h1>Every move, in the open.</h1>
+              <h1>Shared resources. Open records.</h1>
               <p>
                 A shared ledger, open to everyone. Follow balances and recent
                 contract activity directly from Robinhood Chain.
@@ -1614,7 +1445,7 @@ function eventDescription(e) {
                 </div>
               </dl>
               <p class="fine-print">
-                Ralliva is the app brand.
+                Quorivana is the app brand.
                 {{
                   configured
                     ? "The connected contract defines the on-chain token name and symbol."
@@ -1676,8 +1507,8 @@ function eventDescription(e) {
         <section v-if="tab === 'learn'" class="page learn">
           <div class="page-head">
             <div>
-              <span class="eyebrow">THE RALLIVA STARTER GUIDE</span>
-              <h1>Your place in the collective.</h1>
+              <span class="eyebrow">THE QUORIVANA STARTER GUIDE</span>
+              <h1>A little knowledge. A confident start.</h1>
               <p>
                 You don’t need to know everything to make your first move.
                 Here’s the path from exploring to participating.
@@ -1758,7 +1589,7 @@ function eventDescription(e) {
                 <p>
                   A claim, deposit, withdrawal, proposal, or vote is an on-chain
                   transaction. Check the network and details in your wallet.
-                  Rejecting a request submits nothing. Once submitted, Ralliva
+                  Rejecting a request submits nothing. Once submitted, Quorivana
                   shows a transaction link and its confirmation status.
                 </p>
               </details>
@@ -1772,9 +1603,9 @@ function eventDescription(e) {
                 </p>
               </details>
               <details>
-                <summary>Why is the token name different from Ralliva?</summary>
+                <summary>Why is the token name different from Quorivana?</summary>
                 <p>
-                  Ralliva is the application brand. Token names and symbols come
+                  Quorivana is the application brand. Token names and symbols come
                   from the connected contract: {{ tokenIdentity }}. A visual
                   rebrand does not change an existing token, address, balance,
                   or signing domain.
@@ -1790,9 +1621,9 @@ function eventDescription(e) {
                 </p>
               </details>
               <details>
-                <summary>Is Ralliva an official Robinhood product?</summary>
+                <summary>Is Quorivana an official Robinhood product?</summary>
                 <p>
-                  No. Ralliva is an independent community project built on
+                  No. Quorivana is an independent community project built on
                   Robinhood Chain Testnet. It is not affiliated with or endorsed
                   by Robinhood Markets.
                 </p>
@@ -1815,8 +1646,8 @@ function eventDescription(e) {
       </main>
       <footer>
         <span
-          >© 2026 Ralliva <span class="footer-separator">/</span> Small actions.
-          Common ground.</span
+          >© 2026 Quorivana <span class="footer-separator">/</span> Every contribution.
+          A common direction.</span
         ><span>Robinhood Chain Testnet · Independent community project</span>
       </footer>
     </div>

@@ -6,9 +6,9 @@ defineProps({
 const paths = {
   menu: "M4 6h16 M4 12h16 M4 18h16",
   home: "M3 3h7v7H3z M14 3h7v7h-7z M3 14h7v7H3z M14 14h7v7h-7z",
-  quests: "M8 4h12v16H4V8 M8 2v4 M16 2v4 M8 11l2 2 5-5 M8 17h8",
-  stake: "M4 18V9 M10 18V5 M16 18v-7 M22 21H2 M16 5l3-3 3 3 M19 2v12",
-  governance: "M3 4h18v12H9l-6 4V4z M7 8h10 M7 12h6",
+  quests: "M4 3h16v18H4z M8 8l2 2 5-5 M8 14h8 M8 17h5",
+  stake: "M4 20V12h5v8 M9 20V7h5v13 M14 20V3h5v17 M2 20h20",
+  governance: "M4 3h16v14H9l-5 4V3z M8 8h8 M8 12h5",
   treasury: "M3 9h18 M4 20h16 M6 10v7 M12 10v7 M18 10v7 M2 6l10-4 10 4v3H2z",
   learn:
     "M12 5c-3-3-7-3-10-2v15c4-1 7 0 10 2 3-2 6-3 10-2V3c-3-1-7-1-10 2z M12 5v15",
@@ -34,10 +34,11 @@ const paths = {
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
-    stroke-width="1.6"
-    stroke-linecap="round"
-    stroke-linejoin="round"
+    stroke-width="1.5"
+    stroke-linecap="square"
+    stroke-linejoin="miter"
     aria-hidden="true"
+    focusable="false"
   >
     <path :d="paths[name] || paths.arrow" />
   </svg>

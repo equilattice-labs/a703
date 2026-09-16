@@ -6,10 +6,10 @@ import { Contract as EthersContract, parseUnits, formatUnits, isAddress, ZeroAdd
 
 // Exercise the actual composable and ethers Contract runner without a wallet,
 // live RPC, .env files, or transactions. Only providers and lifecycle are mocked.
-const source = readFileSync(new URL('../src/useRalliva.js', import.meta.url), 'utf8')
+const source = readFileSync(new URL('../src/useQuorivana.js', import.meta.url), 'utf8')
   .replace(/^\uFEFF/, '')
   .replace(/^import .*\r?\n/gm, '')
-  .replace('export function useRalliva()', 'function useRalliva()')
+  .replace('export function useQuorivana()', 'function useQuorivana()')
 const A = '0x1111111111111111111111111111111111111111'
 const B = '0x2222222222222222222222222222222222222222'
 const CONTRACT = '0x3333333333333333333333333333333333333333'
@@ -114,7 +114,7 @@ function setup(treasury = '') {
     CHAIN_ID: CHAIN, RPC_URL: 'mock', EXPLORER_URL: 'https://example.invalid', DEPLOYMENT_BLOCK: 0,
     window, setInterval: () => 0, clearInterval() {},
   }
-  const app = new Function(...Object.keys(dependencies), `${source}\nreturn useRalliva();`)(...Object.values(dependencies))
+  const app = new Function(...Object.keys(dependencies), `${source}\nreturn useQuorivana();`)(...Object.values(dependencies))
   return { app, state, listeners, mount: () => mounted(), window }
 }
 

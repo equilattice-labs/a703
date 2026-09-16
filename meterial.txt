@@ -1,13 +1,13 @@
-Ralliva
-Positioning: Community coordination. Small actions. Common ground.
-Tagline: Find your part. Move us forward.
-Brand slug: ralliva
-Uppercase brand: RALLIVA (not a token symbol)
-Candidate X handle: @Ralliva — ownership unconfirmed; not an official link.
-Candidate domain: ralliva.xyz — ownership unconfirmed; not an official launch destination.
+Quorivana
+Positioning: Community coordination. Participation with a shared purpose.
+Tagline: Every contribution, a common direction.
+Brand slug: quorivana
+Uppercase brand: QUORIVANA (not a token symbol)
+Candidate X handle: @quorivana — ownership unconfirmed; not an official link.
+Candidate domain: quorivana.xyz — ownership unconfirmed; not an official launch destination.
 
 Product: community quests, testnet staking, advisory proposals, and treasury visibility.
-Visual identity: midnight #10121c, panel #191d2b, mint #b9f5d0, periwinkle #a9a0ff; a community coordination workspace.
+Visual identity: ivory #f4f1e8, ink #182823, cobalt #2454e6; a community coordination workspace.
 Network: Robinhood Chain Testnet (chain ID 46630)
 RPC URL: https://rpc.testnet.chain.robinhood.com/rpc
 Explorer: https://explorer.testnet.chain.robinhood.com
@@ -15,5 +15,5 @@ Explorer: https://explorer.testnet.chain.robinhood.com
 Contract configuration: preserve VITE_TOKEN_CONTRACT_ADDRESS. A new installation must configure its intended deployment before sending transactions.
 Token labels: read name() and symbol() from the configured contract. Application branding does not rename that token or its permit signing domain.
 Local source identity: Deedluma / DLU. Recorded configured deployment identity: Robinhood Impact / RHI. The app reads the configured contract's actual name and symbol.
-No new Ralliva deployment or token issuance is asserted. An unconfigured app displays explicitly labeled samples.
+No new Quorivana deployment or token issuance is asserted. An unconfigured app displays explicitly labeled samples.
 Governance votes are advisory and do not automatically transfer treasury funds. Test tokens have no promised monetary value or returns.

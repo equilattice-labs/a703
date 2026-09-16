@@ -1,8 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="none">
-  <title>Ralliva</title>
-  <rect width="128" height="128" rx="29" fill="#10121c"/>
-  <g stroke-width="14" stroke-linecap="round" stroke-linejoin="round" transform="translate(9 9) scale(.859375)">
-    <path d="M 29 103 L 29 43 C 29 29 40 21 55 21 L 69 21 C 86 21 99 32 99 47 C 99 62 87 73 72 73 L 55 73" stroke="#b9f5d0"/>
-    <path d="M 55 73 C 75 73 88 90 100 104" stroke="#a9a0ff"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <title>Quorivana — shared direction</title>
+  <rect width="128" height="128" rx="24" fill="#f4f1e8"/>
+  <g transform="translate(6 6) scale(.90625)">
+    <polygon points="14,24 65,24 108,67 84,91 41,48 14,48" fill="#2454e6"/>
+    <polygon points="114,104 63,104 20,61 44,37 87,80 114,80" fill="#182823"/>
   </g>
 </svg>
