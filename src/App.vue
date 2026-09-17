@@ -1,11 +1,11 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, nextTick, watch } from "vue";
-import { useQuorivana } from "./useQuorivana";
+import { usePactelora } from "./usePactelora";
 import { CHAIN_ID, CONTRACT_ADDRESS } from "./contract";
-import quorivanaMark from "./assets/quorivana-mark.svg";
+import pacteloraMark from "./assets/pactelora-mark.svg";
 import Icon from "./Icon.vue";
 
-const quorivana = useQuorivana();
+const pactelora = usePactelora();
 const {
   configured,
   wallet,
@@ -56,7 +56,7 @@ const {
   proposalStatus,
   votePercent,
   parseAmount,
-} = quorivana;
+} = pactelora;
 const mobileMenu = ref(false);
 const validTabs = [
   "home",
@@ -97,7 +97,7 @@ onUnmounted(() => {
   window.removeEventListener("popstate", syncFromHash);
 });
 const nav = [
-  ["home", "Discover"],
+  ["home", "Overview"],
   ["quests", "Quests"],
   ["stake", "Stake"],
   ["governance", "Governance"],
@@ -118,7 +118,7 @@ const samples = [
   {
     id: "sample-1",
     sample: true,
-    title: "Read the Quorivana charter",
+    title: "Read the Pactelora charter",
     reward: 12n * 10n ** 18n,
     detail: "A sample welcome quest. Learn how rewards and stewardship work.",
   },
@@ -150,12 +150,21 @@ const sampleProposals = [
 ];
 const search = ref("");
 const draftSaved = ref(false);
+const clearedDraft = ref(null);
+watch(proposalText, (text) => {
+  if (text) clearedDraft.value = null;
+});
+const draftKey = "pactelora-proposal-draft";
 try {
-  const draftKey = "quorivana-proposal-draft";
-  // Preserve an unfinished draft from the previous application brand once.
-  const legacyDraftKey = "ralliva-proposal-draft";
+  // Migrate unfinished drafts from previous application brands once.
+  const legacyDraftKeys = [
+    "quorivana-proposal-draft",
+    "ralliva-proposal-draft",
+  ];
   const savedDraft = sessionStorage.getItem(draftKey);
-  const legacyDraft = savedDraft ? null : sessionStorage.getItem(legacyDraftKey);
+  const legacyDraft = savedDraft
+    ? null
+    : legacyDraftKeys.map((key) => sessionStorage.getItem(key)).find(Boolean);
   const draft = JSON.parse(savedDraft || legacyDraft || "null");
   if (draft && typeof draft.text === "string") {
     proposalText.value = draft.text.slice(0, 2000);
@@ -163,13 +172,14 @@ try {
       Number.isInteger(draft.days) && draft.days >= 1 && draft.days <= 30
         ? draft.days
         : 7;
-    draftSaved.value = true;
-    if (legacyDraft) {
-      sessionStorage.setItem(draftKey, JSON.stringify({ text: proposalText.value, days: proposalDays.value }));
-    }
-    // Remove obsolete storage even when a newer draft already takes precedence.
-    // Otherwise clearing the current draft could resurrect stale legacy text.
-    sessionStorage.removeItem(legacyDraftKey);
+    draftSaved.value = Boolean(proposalText.value.trim());
+    if (legacyDraft)
+      sessionStorage.setItem(
+        draftKey,
+        JSON.stringify({ text: proposalText.value, days: proposalDays.value }),
+      );
+    // Removing stale copies prevents cleared drafts from returning later.
+    legacyDraftKeys.forEach((key) => sessionStorage.removeItem(key));
   }
 } catch {
   /* Draft persistence is optional when browser storage is unavailable. */
@@ -178,10 +188,10 @@ watch([proposalText, proposalDays], ([text, days]) => {
   try {
     if (text.trim())
       sessionStorage.setItem(
-        "quorivana-proposal-draft",
+        draftKey,
         JSON.stringify({ text, days: Number(days) }),
       );
-    else sessionStorage.removeItem("quorivana-proposal-draft");
+    else sessionStorage.removeItem(draftKey);
     draftSaved.value = Boolean(text.trim());
   } catch {
     draftSaved.value = false;
@@ -251,6 +261,23 @@ async function toggleProposal() {
 function resetFilters() {
   search.value = "";
   questFilter.value = "all";
+}
+const pageLabel = computed(
+  () => nav.find(([id]) => id === tab.value)?.[1] || "Overview",
+);
+function clearDraft() {
+  clearedDraft.value = { text: proposalText.value, days: proposalDays.value };
+  proposalText.value = "";
+  proposalDays.value = 7;
+  document.getElementById("proposal-description")?.focus();
+}
+function undoClearDraft() {
+  if (!clearedDraft.value || proposalText.value) return;
+  const draft = clearedDraft.value;
+  clearedDraft.value = null;
+  proposalText.value = draft.text;
+  proposalDays.value = draft.days;
+  document.getElementById("proposal-description")?.focus();
 }
 function focusMain() {
   document.getElementById("main")?.focus();
@@ -447,29 +474,77 @@ function eventDescription(e) {
     <a class="skip-link" href="#main" @click.prevent="focusMain"
       >Skip to content</a
     >
-    <header class="site-header" @keydown.esc="closeMenu">
-      <div class="header-inner">
-        <button class="brand" aria-label="Quorivana home" @click="go('home')">
-          <img :src="quorivanaMark" width="36" height="36" alt="" /><span
-            >quorivana</span
-          >
-        </button>
-        <nav
-          id="primary-navigation"
-          class="primary-navigation"
-          :class="{ expanded: mobileMenu }"
-          aria-label="Main navigation"
+    <header
+      class="sidebar"
+      :class="{ expanded: mobileMenu }"
+      @keydown.esc="closeMenu"
+    >
+      <button class="brand" aria-label="Pactelora home" @click="go('home')">
+        <img :src="pacteloraMark" width="36" height="36" alt="" /><span
+          >pactelora<span class="brand-caption">A little, together.</span></span
         >
-          <button
-            v-for="n in nav"
-            :key="n[0]"
-            :class="{ active: tab === n[0] }"
-            :aria-current="tab === n[0] ? 'page' : undefined"
-            @click="go(n[0])"
-          >
-            <span>{{ n[1] }}</span>
+      </button>
+      <div class="sidebar-section-label">YOUR WORKSPACE</div>
+      <nav
+        id="primary-navigation"
+        class="primary-navigation"
+        aria-label="Main navigation"
+      >
+        <button
+          v-for="n in nav"
+          :key="n[0]"
+          :class="{ active: tab === n[0] }"
+          :aria-current="tab === n[0] ? 'page' : undefined"
+          @click="go(n[0])"
+        >
+          <Icon :name="n[0]" :size="20" /><span>{{ n[1] }}</span
+          ><span
+            v-if="tab === n[0]"
+            class="nav-current"
+            aria-hidden="true"
+          ></span>
+        </button>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="sidebar-note">
+          <span class="sidebar-note-icon"
+            ><Icon name="spark" :size="23"
+          /></span>
+          <h2>Good things start<br />with a small step.</h2>
+          <p>Find your place in the community.</p>
+          <button class="text-button" @click="go('learn')">
+            Open the guide <Icon :size="16" />
           </button>
-        </nav>
+        </div>
+        <div class="network-footnote">
+          <span class="status-dot"></span
+          ><span>Robinhood Chain <small>Testnet workspace</small></span
+          ><Icon name="shield" :size="18" />
+        </div>
+      </div>
+    </header>
+    <button
+      v-if="mobileMenu"
+      class="menu-backdrop"
+      aria-label="Close navigation overlay"
+      @click="closeMenu"
+    ></button>
+    <div class="workspace">
+      <header class="workspace-topbar" @keydown.esc="closeMenu">
+        <div class="workspace-location">
+          <button
+            id="menu-toggle"
+            class="menu-toggle icon-button"
+            :aria-expanded="mobileMenu"
+            aria-controls="primary-navigation"
+            :aria-label="mobileMenu ? 'Close navigation' : 'Open navigation'"
+            @click="toggleMenu"
+          >
+            <Icon :name="mobileMenu ? 'close' : 'menu'" /></button
+          ><span class="workspace-name">Workspace</span
+          ><span class="breadcrumb-slash">/</span
+          ><span class="current-page">{{ pageLabel }}</span>
+        </div>
         <div class="topbar-actions">
           <button
             class="network-button"
@@ -484,7 +559,7 @@ function eventDescription(e) {
                 : wrongChain
                   ? "Switch network"
                   : "Testnet"
-            }}</button
+            }}<Icon name="chevron" :size="13" /></button
           ><button
             class="wallet-button"
             :disabled="connecting || busy || switching"
@@ -496,55 +571,42 @@ function eventDescription(e) {
                 : connected
                   ? short(wallet)
                   : "Connect wallet"
-            }}</span></button
-          ><button
-            id="menu-toggle"
-            class="menu-toggle"
-            :aria-expanded="mobileMenu"
-            aria-controls="primary-navigation"
-            :aria-label="mobileMenu ? 'Close navigation' : 'Open navigation'"
-            @click="toggleMenu"
-          >
-            <Icon :name="mobileMenu ? 'close' : 'menu'" />
+            }}</span>
           </button>
         </div>
-      </div>
-    </header>
-
-    <div class="workspace">
-      <div v-if="!configured" class="notice preview-notice">
-        <Icon name="info" :size="18" />
-        <p>
-          <strong>You’re exploring a preview.</strong> Sample content, no live
-          transactions.
-        </p>
-        <button class="text-button" @click="go('learn')">
-          How it works <Icon :size="16" />
-        </button>
-      </div>
-      <div v-if="wrongChain" class="notice warning-notice" role="alert">
-        <Icon name="info" />
-        <p>
-          Your wallet is on another network. Read data is from Robinhood Chain
-          Testnet.
-        </p>
-        <button
-          class="outline"
-          :disabled="busy || connecting || switching"
-          @click="switchNetwork"
-        >
-          Switch network
-        </button>
-      </div>
-      <div v-if="paused" class="notice warning-notice" role="status">
-        <Icon name="info" />
-        <p>
-          The protocol is paused. You can browse data; transactions are
-          temporarily unavailable.
-        </p>
-      </div>
-
+      </header>
       <main id="main" tabindex="-1">
+        <div v-if="!configured" class="notice preview-notice">
+          <span class="notice-symbol"><Icon name="info" :size="17" /></span>
+          <p>
+            <strong>A space to explore.</strong> You’re in preview mode with
+            sample content.
+          </p>
+          <button class="text-button" @click="go('learn')">
+            How it works <Icon :size="15" />
+          </button>
+        </div>
+        <div v-if="wrongChain" class="notice warning-notice" role="alert">
+          <Icon name="info" />
+          <p>
+            Your wallet is on another network. Read data is from Robinhood Chain
+            Testnet.
+          </p>
+          <button
+            class="outline"
+            :disabled="busy || connecting || switching"
+            @click="switchNetwork"
+          >
+            Switch network
+          </button>
+        </div>
+        <div v-if="paused" class="notice warning-notice" role="status">
+          <Icon name="info" />
+          <p>
+            The protocol is paused. You can browse data; transactions are
+            temporarily unavailable.
+          </p>
+        </div>
         <div v-if="configured" class="read-status">
           <span :class="{ failed: readError }" role="status"
             ><span
@@ -595,335 +657,623 @@ function eventDescription(e) {
         </p>
 
         <section v-if="tab === 'home'" class="overview">
-          <div class="section-intro">
-            <span class="eyebrow"><span class="status-dot"></span> A WORKSPACE FOR SHARED PROGRESS</span>
-            <span class="edition">QUORIVANA / FIELD NOTES 001</span>
-          </div>
-          <div class="hero">
-            <div class="hero-copy">
-              <h1 aria-label="Every contribution. A common direction.">
-                Every<br />contribution.<br />
-                <span class="highlight">A common<br />direction.</span>
-              </h1>
-              <p>A home for useful work. Find a quest, explore test-token commitments, and help decide what comes next.</p>
-              <div class="hero-actions">
-                <button class="primary" @click="go('quests')">Find your first quest <Icon :size="19" /></button>
-                <button class="secondary-link" @click="go('learn')">Read the guide <Icon name="external" :size="17" /></button>
-              </div>
-              <div class="hero-bottom"><span class="small-cross" aria-hidden="true">+</span><span>Independent voices.<br /><b>One shared direction.</b></span></div>
-            </div>
-            <div class="hero-art" aria-hidden="true">
-              <div class="art-topline"><span>THE PARTICIPATION LOOP</span><span>+</span></div>
-              <svg class="contribution-art" viewBox="0 0 480 400" fill="none">
-                <g stroke="currentColor" stroke-width="1" opacity=".15"><path d="M0 80h480M0 160h480M0 240h480M0 320h480M80 0v400M160 0v400M240 0v400M320 0v400M400 0v400"/></g>
-                <path d="M80 316V168h94v-68h130v98h96v-46" stroke="currentColor" stroke-width="40" stroke-linejoin="miter"/>
-                <path d="m354 173 46-47 46 47" stroke="currentColor" stroke-width="18"/>
-                <path d="M174 284h130V198" stroke="currentColor" stroke-width="2" stroke-dasharray="5 7"/>
-                <circle cx="80" cy="316" r="31" fill="#d4e09b" stroke="currentColor" stroke-width="2"/>
-                <path d="M69 316h22m-11-11v22" stroke="currentColor" stroke-width="2"/>
-                <circle cx="174" cy="284" r="7" fill="currentColor"/>
-                <path d="m230 82 10-14 10 14M240 68v38" stroke="#fffefa" stroke-width="2"/>
-                <path d="m329 240 11-11 11 11m-11-11v38" stroke="currentColor" stroke-width="1.5"/>
-              </svg>
-              <div class="art-label label-one"><span>01</span> CONTRIBUTE</div>
-              <div class="art-label label-two"><span>02</span> COMMIT</div>
-              <div class="art-label label-three"><span>03</span> COORDINATE</div>
-              <div class="art-caption"><span>Progress is a team sport.</span><img :src="quorivanaMark" width="28" height="28" alt="" /></div>
-            </div>
-          </div>
-          <div class="journey-strip">
-            <button @click="go('quests')"><span>01</span><div><strong>Contribute</strong><small>Find your next quest</small></div><Icon :size="20" /></button>
-            <button @click="go('stake')"><span>02</span><div><strong>Commit</strong><small>Build a staking position</small></div><Icon :size="20" /></button>
-            <button @click="go('governance')"><span>03</span><div><strong>Coordinate</strong><small>Help choose a direction</small></div><Icon :size="20" /></button>
-          </div>
-          <div class="stats-strip">
+          <div class="overview-heading">
             <div>
-              <span class="stat-icon"><Icon name="quests" /></span>
-              <div>
-                <span>Open quests</span
-                ><strong>{{
-                  metricsAvailable ? openQuests.toLocaleString() : "—"
-                }}</strong>
-              </div>
-              <span class="stat-note">{{
-                metricsAvailable
-                  ? "Ready for your next move"
-                  : configured
-                    ? "Awaiting chain data"
-                    : "Preview mode"
-              }}</span>
+              <span class="eyebrow">THE COMMUNITY, IN MOTION</span>
+              <h1>Your next small step.</h1>
             </div>
-            <div>
-              <span class="stat-icon"><Icon name="stake" /></span>
-              <div>
-                <span>Held by protocol</span
-                ><strong
-                  >{{ metricsAvailable ? units(totalStaked, 0) : "—" }}
-                  <small>{{ tokenSymbol }}</small></strong
+            <span class="subtle-badge"
+              ><span class="status-dot"></span
+              >{{
+                configured ? "On-chain workspace" : "Explore the possibilities"
+              }}</span
+            >
+          </div>
+          <div class="dashboard-top">
+            <article class="welcome-card">
+              <div class="welcome-copy">
+                <span class="welcome-kicker"
+                  ><span class="mini-line"></span> BUILT TOGETHER</span
                 >
-              </div>
-              <span class="stat-note">{{
-                metricsAvailable
-                  ? "Read directly from the contract"
-                  : "No estimated balances"
-              }}</span>
-            </div>
-            <div>
-              <span class="stat-icon"><Icon name="governance" /></span>
-              <div>
-                <span>Open proposals</span
-                ><strong>{{
-                  metricsAvailable ? openProposals.toLocaleString() : "—"
-                }}</strong>
-              </div>
-              <span class="stat-note">Your voice has a place</span>
-            </div>
-          </div>
-          <div class="section-heading">
-            <div>
-              <span class="eyebrow">YOUR NEXT CONTRIBUTION</span>
-              <h2>The work starts with you.</h2>
-            </div>
-            <button class="text-button" @click="go('quests')">
-              View all quests <Icon :size="18" />
-            </button>
-          </div>
-          <div class="home-bottom">
-            <div class="starter-list">
-              <button
-                v-for="(q, index) in featuredQuests"
-                :key="q.id"
-                class="starter-row"
-                @click="openQuest(q)"
-              >
-                <span class="row-number">0{{ index + 1 }}</span>
-                <div>
-                  <span class="tiny-label">{{
-                    q.sample ? "SAMPLE QUEST" : questStatus(q) + " QUEST"
-                  }}</span>
-                  <h3>{{ q.title }}</h3>
-                </div>
-                <span class="row-reward"
-                  >{{ units(q.reward) }} <small>{{ tokenSymbol }}</small></span
-                ><Icon name="external" />
-              </button>
-              <div v-if="!featuredQuests.length" class="empty compact">
-                <Icon name="quests" :size="28" />
-                <h3>
-                  {{
-                    reading
-                      ? "Finding your next move…"
-                      : readError
-                        ? "Quests will appear once connected."
-                        : "The next chapter is open."
-                  }}
-                </h3>
+                <h2>Small actions.<br /><span>Shared purpose.</span></h2>
                 <p>
-                  {{
-                    reading
-                      ? "Reading the latest quests from the contract."
-                      : "Explore the field guide while the community prepares its next quests."
-                  }}
+                  A quest to join. An idea to share.<br />A place to make it
+                  matter.
                 </p>
-                <button class="text-button" @click="go('learn')">
-                  Read the field guide <Icon :size="18" />
+                <button class="primary apricot" @click="go('quests')">
+                  Find your first quest <Icon :size="18" />
                 </button>
               </div>
-            </div>
-            <article class="commons-card">
-              <Icon name="spark" :size="30" /><span class="tiny-label"
-                >SHARED RESOURCES, OPEN RECORDS</span
-              >
-              <h2>A clear view.<br />A common purpose.</h2>
+              <div class="pact-art" aria-hidden="true">
+                <div class="art-orbit orbit-one"></div>
+                <div class="art-orbit orbit-two"></div>
+                <svg viewBox="0 0 320 320" class="pact-rosette">
+                  <defs>
+                    <linearGradient id="pact-lilac" x1="0" y1="0" x2="1" y2="1">
+                      <stop stop-color="#e6ddff" />
+                      <stop offset="1" stop-color="#8b72cb" />
+                    </linearGradient>
+                    <linearGradient
+                      id="pact-apricot"
+                      x1="0"
+                      y1="0"
+                      x2="1"
+                      y2="1"
+                    >
+                      <stop stop-color="#ffe0c7" />
+                      <stop offset="1" stop-color="#c87571" />
+                    </linearGradient>
+                  </defs>
+                  <g fill="none" stroke-width="32">
+                    <ellipse
+                      cx="160"
+                      cy="121"
+                      rx="56"
+                      ry="83"
+                      stroke="url(#pact-lilac)"
+                      transform="rotate(-35 160 160)"
+                    />
+                    <ellipse
+                      cx="160"
+                      cy="121"
+                      rx="56"
+                      ry="83"
+                      stroke="url(#pact-apricot)"
+                      transform="rotate(55 160 160)"
+                    />
+                    <ellipse
+                      cx="160"
+                      cy="121"
+                      rx="56"
+                      ry="83"
+                      stroke="url(#pact-lilac)"
+                      transform="rotate(145 160 160)"
+                    />
+                    <ellipse
+                      cx="160"
+                      cy="121"
+                      rx="56"
+                      ry="83"
+                      stroke="url(#pact-apricot)"
+                      transform="rotate(235 160 160)"
+                    />
+                  </g>
+                  <path
+                    d="M79 141c-6-26 2-53 21-70"
+                    stroke="#e2d6ff"
+                    stroke-width="32"
+                    fill="none"
+                  /></svg
+                ><span class="art-spark art-spark-one">✦</span
+                ><span class="art-spark art-spark-two">+</span
+                ><span class="art-caption">MANY PARTS. ONE PURPOSE.</span>
+              </div>
+            </article>
+            <aside class="signal-card">
+              <div class="signal-heading">
+                <span class="eyebrow">COMMUNITY PULSE</span
+                ><Icon name="pulse" :size="18" />
+              </div>
+              <div class="signal-row">
+                <span class="signal-icon"><Icon name="quests" /></span>
+                <div>
+                  <span>Open quests</span
+                  ><strong>{{
+                    metricsAvailable ? openQuests.toLocaleString() : "—"
+                  }}</strong>
+                </div>
+              </div>
+              <div class="signal-row">
+                <span class="signal-icon peach"><Icon name="stake" /></span>
+                <div>
+                  <span>Held by protocol</span
+                  ><strong
+                    >{{ metricsAvailable ? units(totalStaked, 0) : "—" }}
+                    <small>{{ tokenSymbol }}</small></strong
+                  >
+                </div>
+              </div>
+              <div class="signal-row">
+                <span class="signal-icon mint"><Icon name="governance" /></span>
+                <div>
+                  <span>Open proposals</span
+                  ><strong>{{
+                    metricsAvailable ? openProposals.toLocaleString() : "—"
+                  }}</strong>
+                </div>
+              </div>
+              <p class="signal-footnote">
+                <span class="status-dot"></span
+                >{{
+                  metricsAvailable
+                    ? "Read directly from the contract"
+                    : configured
+                      ? "Awaiting chain data"
+                      : "Preview · no live balances"
+                }}
+              </p>
+            </aside>
+          </div>
+          <div class="section-heading">
+            <h2>Make a little progress</h2>
+            <span class="muted-label">Three ways to take part</span>
+          </div>
+          <div class="launchpad">
+            <button class="launch-card" @click="go('quests')">
+              <span class="launch-icon"><Icon name="quests" :size="24" /></span
+              ><span class="launch-copy"
+                ><strong>Find a quest</strong
+                ><small>Useful work starts here.</small></span
+              ><Icon :size="19" /></button
+            ><button class="launch-card" @click="go('stake')">
+              <span class="launch-icon peach"
+                ><Icon name="stake" :size="24" /></span
+              ><span class="launch-copy"
+                ><strong>Build a position</strong
+                ><small>Put time behind your tokens.</small></span
+              ><Icon :size="19" /></button
+            ><button class="launch-card" @click="go('governance')">
+              <span class="launch-icon mint"
+                ><Icon name="governance" :size="24" /></span
+              ><span class="launch-copy"
+                ><strong>Shape what’s next</strong
+                ><small>Bring your voice to the table.</small></span
+              ><Icon :size="19" />
+            </button>
+          </div>
+          <div class="dashboard-bottom">
+            <section class="opportunity-panel">
+              <div class="section-heading">
+                <h2>A place to begin</h2>
+                <button class="text-button" @click="go('quests')">
+                  All quests <Icon :size="16" />
+                </button>
+              </div>
+              <div class="starter-list">
+                <button
+                  v-for="(q, index) in featuredQuests"
+                  :key="q.id"
+                  class="starter-row"
+                  @click="openQuest(q)"
+                >
+                  <span class="starter-icon"
+                    ><Icon
+                      :name="['learn', 'spark', 'treasury'][index % 3]"
+                      :size="21" /></span
+                  ><span class="starter-copy"
+                    ><span class="tiny-label">{{
+                      q.sample ? "SAMPLE QUEST" : questStatus(q) + " QUEST"
+                    }}</span
+                    ><strong>{{ q.title }}</strong></span
+                  ><span class="row-reward"
+                    >{{ units(q.reward) }}<small>{{ tokenSymbol }}</small></span
+                  ><Icon :size="17" />
+                </button>
+                <div v-if="!featuredQuests.length" class="empty compact">
+                  <Icon name="quests" :size="28" />
+                  <h3>
+                    {{
+                      reading
+                        ? "Finding your next move…"
+                        : readError
+                          ? "Quests will appear once connected."
+                          : "The next chapter is open."
+                    }}
+                  </h3>
+                  <p>
+                    {{
+                      reading
+                        ? "Reading the latest quests from the contract."
+                        : "Explore the guide while the community prepares its next quests."
+                    }}
+                  </p>
+                  <button class="text-button" @click="go('learn')">
+                    Read the guide <Icon :size="17" />
+                  </button>
+                </div>
+              </div>
+            </section>
+            <article class="transparency-card">
+              <span class="round-icon"><Icon name="treasury" :size="26" /></span
+              ><span class="eyebrow">NOTHING BEHIND THE CURTAIN</span>
+              <h2>Shared resources.<br />A clear view.</h2>
               <p>
-                Shared resources deserve a clear view. Follow the treasury and
-                see the story behind each transaction.
+                Follow the funds and the decisions that move this community
+                forward.
               </p>
               <button class="text-button" @click="go('treasury')">
-                Open the ledger <Icon name="external" />
+                Explore the treasury <Icon :size="17" />
               </button>
             </article>
           </div>
         </section>
-
-        <section v-if="tab === 'quests'" class="page">
+        <section v-if="tab === 'quests'" class="page quests-page">
           <div class="page-head">
             <div>
-              <span class="eyebrow">01 / CONTRIBUTE</span>
-              <h1>Find your next contribution.</h1>
+              <span class="eyebrow">CONTRIBUTE / FIND YOUR PART</span>
+              <h1>A little work. A shared win.</h1>
               <p>
-                Explore open quests, check the rules, and claim a testnet
-                reward. One claim per wallet, within each quest’s cap and
-                deadline.
+                Explore quests and claim a testnet reward. Every quest has its
+                own cap and deadline, with one claim per wallet.
               </p>
             </div>
-            <span class="page-stamp"><Icon name="quests" :size="35" /></span>
+            <span class="page-emblem"><Icon name="quests" :size="32" /></span>
           </div>
-          <div class="quest-toolbar">
-            <label class="search-field"
-              ><Icon name="search" :size="19" /><span class="sr-only"
-                >Search quests</span
-              ><input
-                v-model="search"
-                type="search"
-                placeholder="Search quests…"
-                autocomplete="off"
-            /></label>
-            <div class="filters" role="group" aria-label="Filter quests">
-              <button
-                v-for="f in configured
-                  ? ['all', 'open', 'claimed']
-                  : ['all', 'sample']"
-                :key="f"
-                :aria-pressed="questFilter === f"
-                :class="{ selected: questFilter === f }"
-                @click="questFilter = f"
+          <div class="quest-workspace">
+            <div class="quest-toolbar">
+              <label class="search-field"
+                ><Icon name="search" :size="19" /><span class="sr-only"
+                  >Search quests</span
+                ><input
+                  v-model="search"
+                  type="search"
+                  placeholder="Find something to work on…"
+                  autocomplete="off"
+              /></label>
+              <div class="filters" role="group" aria-label="Filter quests">
+                <button
+                  v-for="f in configured
+                    ? ['all', 'open', 'claimed']
+                    : ['all', 'sample']"
+                  :key="f"
+                  :aria-pressed="questFilter === f"
+                  :class="{ selected: questFilter === f }"
+                  @click="questFilter = f"
+                >
+                  {{ f
+                  }}<span v-if="f === 'all'" class="filter-count">{{
+                    allQuests.length
+                  }}</span>
+                </button>
+              </div>
+              <span class="results-count" role="status"
+                >{{ visibleQuests.length }}
+                {{ visibleQuests.length === 1 ? "quest" : "quests" }}</span
               >
-                {{ f }}
+            </div>
+            <div
+              v-if="reading && !allQuests.length"
+              class="skeleton-grid"
+              role="status"
+            >
+              <span class="sr-only">Loading quests</span>
+              <div v-for="i in 3" :key="i" class="skeleton"></div>
+            </div>
+            <div v-if="!reading && !visibleQuests.length" class="empty">
+              <Icon name="search" :size="32" />
+              <h2>
+                {{
+                  readError
+                    ? "Quest data is unavailable."
+                    : search || questFilter !== "all"
+                      ? "No quests found."
+                      : "Room for the first contribution."
+                }}
+              </h2>
+              <p>
+                {{
+                  readError
+                    ? "Retry the connection to load the latest quests."
+                    : search || questFilter !== "all"
+                      ? "Try a different keyword or show all quests."
+                      : "No quests have been published yet. Check back for the next community activity."
+                }}
+              </p>
+              <button
+                v-if="search || questFilter !== 'all'"
+                class="outline"
+                @click="resetFilters"
+              >
+                Clear filters</button
+              ><button
+                v-else-if="readError"
+                class="outline"
+                :disabled="reading"
+                @click="refresh"
+              >
+                Try again
               </button>
             </div>
-            <span class="results-count" role="status"
-              >{{ visibleQuests.length }}
-              {{ visibleQuests.length === 1 ? "quest" : "quests" }}</span
-            >
-          </div>
-          <div
-            v-if="reading && !allQuests.length"
-            class="skeleton-grid"
-            role="status"
-          >
-            <span class="sr-only">Loading quests</span>
-            <div v-for="i in 3" :key="i" class="skeleton"></div>
-          </div>
-          <div v-if="!reading && !visibleQuests.length" class="empty">
-            <Icon name="search" :size="32" />
-            <h2>
-              {{
-                readError
-                  ? "Quest data is unavailable."
-                  : search || questFilter !== "all"
-                    ? "No quests found."
-                    : "Room for the first contribution."
-              }}
-            </h2>
-            <p>
-              {{
-                readError
-                  ? "Retry the connection to load the latest quests."
-                  : search || questFilter !== "all"
-                    ? "Try a different keyword or show all quests."
-                    : "No quests have been published yet. Check back for the next community activity."
-              }}
-            </p>
-            <button
-              v-if="search || questFilter !== 'all'"
-              class="outline"
-              @click="resetFilters"
-            >
-              Clear filters</button
-            ><button
-              v-else-if="readError"
-              class="outline"
-              :disabled="reading"
-              @click="refresh"
-            >
-              Try again
-            </button>
-          </div>
-          <div class="quest-grid">
-            <article v-for="(q, index) in visibleQuests" :key="q.id" class="quest-card" :id="'quest-' + q.id" :aria-labelledby="'quest-title-' + q.id" tabindex="-1">
-              <div class="quest-index"><span>{{ String(index + 1).padStart(2, "0") }}</span><Icon :name="['learn', 'spark', 'treasury'][index % 3]" :size="24" /></div>
-              <div class="quest-main">
-                <div class="quest-card-top"><span class="tiny-label">{{ q.sample ? "EXAMPLE QUEST" : "QUEST / " + String(q.id).padStart(3, "0") }}</span><span class="badge" :class="{ open: questStatus(q) === 'Open' }">{{ questStatus(q) }}</span></div>
-                <h2 :id="'quest-title-' + q.id">{{ q.title }}</h2>
-                <p>{{ q.sample ? q.detail : "An open participation reward. Claiming is recorded on Robinhood Chain. No off-chain work is verified by this claim." }}</p>
-                <div v-if="!q.sample" class="quest-cap">
-                  <div><span>{{ q.claims.toLocaleString() }} / {{ q.maxClaims.toLocaleString() }} claimed</span><span>{{ Math.max(0, q.maxClaims - q.claims).toLocaleString() }} left</span></div>
-                  <progress :value="q.claims" :max="q.maxClaims || 1" :aria-label="q.claims + ' of ' + q.maxClaims + ' claims used'"></progress>
-                  <span><Icon name="clock" :size="14" /> Closes {{ date(q.expiresAt) }}</span>
+            <div class="quest-grid">
+              <article
+                v-for="(q, index) in visibleQuests"
+                :key="q.id"
+                class="quest-card"
+                :id="'quest-' + q.id"
+                :aria-labelledby="'quest-title-' + q.id"
+                tabindex="-1"
+              >
+                <div class="quest-card-top">
+                  <span
+                    class="quest-symbol"
+                    :class="['lilac', 'peach', 'mint'][index % 3]"
+                    ><Icon
+                      :name="['learn', 'spark', 'treasury'][index % 3]"
+                      :size="26" /></span
+                  ><span
+                    class="badge"
+                    :class="{ open: questStatus(q) === 'Open' }"
+                    >{{ questStatus(q) }}</span
+                  >
                 </div>
-              </div>
-              <div class="quest-action">
-                <div class="quest-reward"><span>Reward <small v-if="q.sample">· example</small></span><strong>{{ units(q.reward) }} <small>{{ tokenSymbol }}</small></strong></div>
-                <button class="outline wide" :disabled="actionDisabled || (!q.sample && questStatus(q) !== 'Open')" @click="claim(q)">{{ q.sample ? "Preview quest" : q.claimed ? "Already claimed" : questStatus(q) !== "Open" ? questStatus(q) : connected ? "Claim reward" : "Connect to claim" }}<Icon :size="18" /></button>
-                <button v-if="isOwner && !q.sample" class="text-button steward-action" :disabled="busy" @click="setQuest(q)">{{ q.active ? "Pause quest" : "Resume quest" }}</button>
-              </div>
-            </article>
+                <div class="quest-main">
+                  <span class="tiny-label">{{
+                    q.sample
+                      ? "EXAMPLE QUEST"
+                      : "QUEST / " + String(q.id).padStart(3, "0")
+                  }}</span>
+                  <h2 :id="'quest-title-' + q.id">{{ q.title }}</h2>
+                  <p>
+                    {{
+                      q.sample
+                        ? q.detail
+                        : "An open participation reward. Claiming is recorded on Robinhood Chain. No off-chain work is verified by this claim."
+                    }}
+                  </p>
+                  <div v-if="!q.sample" class="quest-cap">
+                    <div>
+                      <span
+                        >{{ q.claims.toLocaleString() }} /
+                        {{ q.maxClaims.toLocaleString() }} claimed</span
+                      ><span
+                        >{{
+                          Math.max(0, q.maxClaims - q.claims).toLocaleString()
+                        }}
+                        left</span
+                      >
+                    </div>
+                    <progress
+                      :value="q.claims"
+                      :max="q.maxClaims || 1"
+                      :aria-label="
+                        q.claims + ' of ' + q.maxClaims + ' claims used'
+                      "
+                    ></progress
+                    ><span
+                      ><Icon name="clock" :size="14" />Closes
+                      {{ date(q.expiresAt) }}</span
+                    >
+                  </div>
+                </div>
+                <div class="quest-action">
+                  <div class="quest-reward">
+                    <span>Reward <small v-if="q.sample">· example</small></span
+                    ><strong
+                      >{{ units(q.reward) }}
+                      <small>{{ tokenSymbol }}</small></strong
+                    >
+                  </div>
+                  <button
+                    class="outline wide"
+                    :disabled="
+                      actionDisabled || (!q.sample && questStatus(q) !== 'Open')
+                    "
+                    @click="claim(q)"
+                  >
+                    {{
+                      q.sample
+                        ? "Preview quest"
+                        : q.claimed
+                          ? "Already claimed"
+                          : questStatus(q) !== "Open"
+                            ? questStatus(q)
+                            : connected
+                              ? "Claim reward"
+                              : "Connect to claim"
+                    }}<Icon :size="17" /></button
+                  ><button
+                    v-if="isOwner && !q.sample"
+                    class="text-button steward-action"
+                    :disabled="busy"
+                    @click="setQuest(q)"
+                  >
+                    {{ q.active ? "Pause quest" : "Resume quest" }}
+                  </button>
+                </div>
+              </article>
+            </div>
+          </div>
+          <div class="quest-guidance">
+            <Icon name="shield" :size="22" />
+            <div>
+              <strong>Your wallet, your decision.</strong>
+              <p>
+                Review the quest and network before confirming. A preview never
+                sends a transaction.
+              </p>
+            </div>
+            <button class="text-button" @click="go('learn')">
+              How quests work <Icon :size="17" />
+            </button>
           </div>
           <form
             v-if="isOwner"
             class="panel admin-box"
             @submit.prevent="createQuest"
           >
-            <span class="eyebrow">STEWARD TOOLS</span>
-            <h2>Publish a quest</h2>
-            <p>Rewards are minted when claimed, subject to the supply cap.</p>
-            <div class="form-row">
-              <label
-                >Quest title<input
-                  v-model="adminTitle"
-                  maxlength="200"
-                  required
-                  placeholder="Welcome to Quorivana" /></label
-              ><label
-                >Reward ({{ tokenSymbol }})<input
-                  v-model="adminReward"
-                  inputmode="decimal"
-                  required
-                  placeholder="10"
-              /></label>
+            <div class="admin-intro">
+              <span class="eyebrow">STEWARD TOOLS</span>
+              <h2>Make room for<br />the next contribution.</h2>
+              <p>Rewards are minted when claimed, subject to the supply cap.</p>
             </div>
-            <div class="form-row">
-              <label
-                >Maximum claims<input
-                  v-model="adminMax"
-                  type="number"
-                  min="1"
-                  max="1000000"
-                  required /></label
-              ><label
-                >Expires in days<input
-                  v-model="adminDays"
-                  type="number"
-                  min="1"
-                  max="365"
-                  required
-              /></label>
+            <div class="admin-fields">
+              <h3>Publish a quest</h3>
+              <div class="form-row">
+                <label
+                  >Quest title<input
+                    v-model="adminTitle"
+                    maxlength="200"
+                    required
+                    placeholder="Welcome to Pactelora" /></label
+                ><label
+                  >Reward ({{ tokenSymbol }})<input
+                    v-model="adminReward"
+                    inputmode="decimal"
+                    required
+                    placeholder="10"
+                /></label>
+              </div>
+              <div class="form-row">
+                <label
+                  >Maximum claims<input
+                    v-model="adminMax"
+                    type="number"
+                    min="1"
+                    max="1000000"
+                    required /></label
+                ><label
+                  >Expires in days<input
+                    v-model="adminDays"
+                    type="number"
+                    min="1"
+                    max="365"
+                    required
+                /></label>
+              </div>
+              <button class="primary" :disabled="actionDisabled" type="submit">
+                Publish quest <Icon name="plus" :size="18" />
+              </button>
             </div>
-            <button class="primary" :disabled="actionDisabled" type="submit">
-              Publish quest <Icon name="plus" :size="18" />
-            </button>
           </form>
         </section>
 
-        <section v-if="tab === 'stake'" class="page">
+        <section v-if="tab === 'stake'" class="page stake-page">
           <div class="page-head">
             <div>
-              <span class="eyebrow">02 / COMMIT</span>
-              <h1>Put time behind your conviction.</h1>
+              <span class="eyebrow">COMMIT / MAKE TIME COUNT</span>
+              <h1>A position with purpose.</h1>
               <p>
-                Choose how much to commit and for how long. Your principal stays
-                in the contract until its lock ends and you withdraw it.
+                Commit test tokens for a period you choose. Track your rewards
+                and withdraw your principal after the lock ends.
               </p>
             </div>
-            <span class="page-stamp"><Icon name="stake" :size="35" /></span>
+            <span class="page-emblem peach"
+              ><Icon name="stake" :size="32"
+            /></span>
           </div>
-          <ol class="flow-steps" aria-label="Staking steps">
-            <li class="current"><span>1</span> Set amount & duration</li>
-            <li><span>2</span> Review in wallet</li>
-            <li><span>3</span> Track your position</li>
-          </ol>
           <div class="stake-layout">
+            <div class="position-column">
+              <article class="position-card">
+                <div class="panel-heading">
+                  <span class="eyebrow">YOUR POSITION</span
+                  ><span class="position-icon"
+                    ><Icon name="wallet" :size="21"
+                  /></span>
+                </div>
+                <strong class="position-balance"
+                  >{{ connected && accountReady ? units(position.amount) : "—"
+                  }}<small>{{ tokenSymbol }} committed</small></strong
+                >
+                <p>
+                  {{
+                    connected
+                      ? !accountReady
+                        ? accountReading
+                          ? "Reading your wallet data…"
+                          : "Wallet data needs a refresh."
+                        : position.amount > 0n
+                          ? "A small commitment to shared progress."
+                          : "Your first commitment starts here."
+                      : "Connect your wallet to see your position."
+                  }}
+                </p>
+                <div class="position-data">
+                  <div class="position-detail">
+                    <span>Claimable rewards</span
+                    ><b
+                      >{{
+                        connected && accountReady
+                          ? units(position.yield, 8)
+                          : "—"
+                      }}
+                      {{ tokenSymbol }}</b
+                    >
+                  </div>
+                  <div class="position-detail">
+                    <span>Unlock date</span
+                    ><b>{{
+                      connected && !accountReady
+                        ? "Waiting for wallet data"
+                        : connected && position.amount > 0n
+                          ? date(position.unlockAt)
+                          : "No active lock"
+                    }}</b>
+                  </div>
+                  <div v-if="connected" class="position-detail">
+                    <span>Gas balance</span
+                    ><b>{{ accountReady ? units(native, 6) : "?" }} ETH</b>
+                  </div>
+                </div>
+                <button
+                  v-if="!connected"
+                  class="outline wide"
+                  :disabled="connecting || busy || switching"
+                  @click="connect"
+                >
+                  Connect wallet <Icon name="wallet" :size="18" /></button
+                ><template v-else
+                  ><button
+                    class="outline wide"
+                    :disabled="
+                      actionDisabled || position.yield === 0n || !!accountError
+                    "
+                    @click="claimYield"
+                  >
+                    Claim rewards <Icon :size="18" /></button
+                  ><button
+                    class="text-button wide"
+                    :disabled="
+                      actionDisabled ||
+                      position.amount === 0n ||
+                      !unlocked ||
+                      !!accountError
+                    "
+                    @click="unstake"
+                  >
+                    {{
+                      position.amount > 0n && !unlocked
+                        ? "Principal is locked"
+                        : "Withdraw principal"
+                    }}
+                  </button></template
+                >
+              </article>
+              <article class="staking-note">
+                <Icon name="shield" :size="23" />
+                <div>
+                  <h3>A clear commitment.</h3>
+                  <p>
+                    Rewards are simple, without automatic compounding. Claiming
+                    rewards keeps your lock unchanged. The supply cap limits
+                    reward availability.
+                  </p>
+                  <p class="fine-print">
+                    Testnet tokens have no promised market value or financial
+                    return.
+                  </p>
+                  <button class="text-button" @click="go('learn')">
+                    Read the guide <Icon :size="16" />
+                  </button>
+                </div>
+              </article>
+            </div>
             <form class="panel stake-card" @submit.prevent="stake">
               <div class="panel-heading">
-                <h2>Create a position</h2>
+                <div>
+                  <span class="eyebrow">SET UP YOUR COMMITMENT</span>
+                  <h2>Create a position</h2>
+                </div>
                 <span class="badge">{{
                   configured ? "Testnet" : "Sample"
                 }}</span>
               </div>
+              <ol class="flow-steps" aria-label="Staking steps">
+                <li class="current"><span>1</span>Set terms</li>
+                <li><span>2</span>Review in wallet</li>
+                <li><span>3</span>Track position</li>
+              </ol>
               <label class="amount-label" for="stake-amount"
-                >Amount to stake
-                <span
+                >Amount to stake<span
                   >Available:
                   {{ connected && accountReady ? units(token) : "—" }}
                   {{ tokenSymbol }}</span
@@ -1007,7 +1357,7 @@ function eventDescription(e) {
                 </div>
               </div>
               <div class="form-note">
-                <Icon name="info" :size="18" />
+                <Icon name="info" :size="17" />
                 <p>
                   Adding to a position can extend its unlock date. Estimates
                   assume an unchanged rate and available reward supply.
@@ -1028,435 +1378,413 @@ function eventDescription(e) {
                       : connected
                         ? "Stake " + tokenSymbol
                         : "Connect and stake"
-                }}<Icon />
+                }}<Icon :size="18" />
               </button>
             </form>
-            <div class="position-column">
-              <article class="position-card">
-                <div class="panel-heading">
-                  <span class="eyebrow">YOUR POSITION</span
-                  ><Icon name="wallet" />
-                </div>
-                <strong class="position-balance"
-                  >{{
-                    connected && accountReady ? units(position.amount) : "—"
-                  }}
-                  <small>{{ tokenSymbol }}</small></strong
-                >
-                <p>
-                  {{
-                    connected
-                      ? !accountReady
-                        ? accountReading
-                          ? "Reading your wallet data…"
-                          : "Wallet data needs a refresh."
-                        : position.amount > 0n
-                          ? "Committed to the next chapter."
-                          : "Your first commitment starts here."
-                      : "Connect your wallet to see your position."
-                  }}
-                </p>
-                <div class="position-detail">
-                  <span>Claimable rewards</span
-                  ><b
-                    >{{
-                      connected && accountReady ? units(position.yield, 8) : "—"
-                    }}
-                    {{ tokenSymbol }}</b
-                  >
-                </div>
-                <div class="position-detail">
-                  <span>Unlock date</span
-                  ><b>{{
-                    connected && !accountReady
-                      ? "Waiting for wallet data"
-                      : connected && position.amount > 0n
-                        ? date(position.unlockAt)
-                        : "No active lock"
-                  }}</b>
-                </div>
-                <div v-if="connected" class="position-detail">
-                  <span>Gas balance</span
-                  ><b>{{ accountReady ? units(native, 6) : "?" }} ETH</b>
-                </div>
-                <button
-                  v-if="!connected"
-                  class="outline wide"
-                  :disabled="connecting || busy || switching"
-                  @click="connect"
-                >
-                  Connect wallet <Icon name="wallet" :size="18" /></button
-                ><template v-else
-                  ><button
-                    class="outline wide"
-                    :disabled="
-                      actionDisabled || position.yield === 0n || !!accountError
-                    "
-                    @click="claimYield"
-                  >
-                    Claim rewards <Icon :size="18" /></button
-                  ><button
-                    class="text-button wide"
-                    :disabled="
-                      actionDisabled ||
-                      position.amount === 0n ||
-                      !unlocked ||
-                      !!accountError
-                    "
-                    @click="unstake"
-                  >
-                    {{
-                      position.amount > 0n && !unlocked
-                        ? "Principal is locked"
-                        : "Withdraw principal"
-                    }}
-                  </button></template
-                >
-              </article>
-              <article class="staking-note">
-                <Icon name="shield" :size="24" />
-                <h3>Know your commitment.</h3>
-                <p>
-                  Rewards are simple and do not compound automatically. Claiming
-                  rewards does not reset your lock. The supply cap limits reward
-                  availability.
-                </p>
-                <p class="fine-print">
-                  Testnet tokens have no promised market value or financial
-                  return.
-                </p>
-                <button class="text-button" @click="go('learn')">
-                  Read the field guide <Icon name="external" :size="17" />
-                </button>
-              </article>
-            </div>
           </div>
         </section>
-
-        <section v-if="tab === 'governance'" class="page">
+        <section v-if="tab === 'governance'" class="page governance-page">
           <div class="page-head">
             <div>
-              <span class="eyebrow">03 / COORDINATE</span>
-              <h1>Make the next move, together.</h1>
+              <span class="eyebrow">COORDINATE / EVERY VOICE COUNTS</span>
+              <h1>The next chapter starts here.</h1>
               <p>
-                Bring an idea to the table. Read the proposals and make your
-                voice count. Votes are advisory; treasury spending is a separate
-                steward action.
+                Put an idea into words, hear other perspectives, and help choose
+                a direction. Votes are advisory; treasury spending remains a
+                separate steward action.
               </p>
             </div>
-            <button
-              id="proposal-toggle"
-              class="primary"
-              :aria-expanded="showProposal"
-              aria-controls="proposal-editor"
-              @click="toggleProposal"
-            >
-              <Icon :name="showProposal ? 'close' : 'plus'" :size="18" />{{
-                showProposal ? "Close editor" : "New proposal"
-              }}
-            </button>
+            <span class="page-emblem mint"
+              ><Icon name="governance" :size="32"
+            /></span>
           </div>
-          <form
-            v-if="showProposal"
-            id="proposal-editor"
-            class="panel proposal-editor"
-            @submit.prevent="createProposal"
-            @keydown.esc.prevent="toggleProposal"
-          >
-            <div class="panel-heading">
-              <h2>What should we do next?</h2>
-              <span class="badge">Draft</span>
-            </div>
-            <label for="proposal-description">Proposal description</label
-            ><textarea
-              id="proposal-description"
-              v-model="proposalText"
-              minlength="10"
-              maxlength="2000"
-              required
-              placeholder="Describe the decision, its purpose, any budget, and the intended outcome."
-              aria-describedby="proposal-help"
-            ></textarea>
-            <div id="proposal-help" class="editor-help">
-              <span
-                >{{
-                  draftSaved
-                    ? "Draft saved in this tab."
-                    : "10–2,000 characters."
-                }}
-                Published proposals are recorded on-chain.</span
-              ><span>{{ proposalText.length }} / 2,000</span>
-            </div>
-            <div class="editor-bottom">
-              <label
-                >Voting period (days)<input
-                  v-model="proposalDays"
-                  type="number"
-                  min="1"
-                  max="30"
+          <div class="governance-layout">
+            <aside class="compose-column">
+              <div class="compose-intro">
+                <span class="round-icon"><Icon name="plus" :size="25" /></span>
+                <h2>Have a thought?</h2>
+                <p>
+                  Every shared decision begins with someone putting an idea
+                  forward.
+                </p>
+                <button
+                  id="proposal-toggle"
+                  class="primary wide"
+                  :aria-expanded="showProposal"
+                  aria-controls="proposal-editor"
+                  @click="toggleProposal"
+                >
+                  <Icon :name="showProposal ? 'close' : 'plus'" :size="18" />{{
+                    showProposal
+                      ? "Close editor"
+                      : draftSaved
+                        ? "Continue your draft"
+                        : "New proposal"
+                  }}</button
+                ><span
+                  v-if="draftSaved && !showProposal"
+                  class="draft-indicator"
+                  ><Icon name="check" :size="14" />Your draft is saved in this
+                  tab.</span
+                >
+              </div>
+              <form
+                v-if="showProposal"
+                id="proposal-editor"
+                class="panel proposal-editor"
+                @submit.prevent="createProposal"
+                @keydown.esc.prevent="toggleProposal"
+              >
+                <div class="panel-heading">
+                  <h2>Shape your idea</h2>
+                  <span class="badge">Draft</span>
+                </div>
+                <label for="proposal-description">Proposal description</label
+                ><textarea
+                  id="proposal-description"
+                  v-model="proposalText"
+                  minlength="10"
+                  maxlength="2000"
                   required
-              /></label>
-              <div class="editor-actions">
-                <button class="quiet" type="button" @click="toggleProposal">
-                  Keep draft & close</button
+                  placeholder="Describe the decision, its purpose, any budget, and the intended outcome."
+                  aria-describedby="proposal-help"
+                ></textarea>
+                <div id="proposal-help" class="editor-help">
+                  <span>{{
+                    draftSaved
+                      ? "Draft saved in this tab."
+                      : "10–2,000 characters."
+                  }}</span
+                  ><span>{{ proposalText.length }} / 2,000</span>
+                </div>
+                <p class="fine-print">
+                  Published proposals are recorded on-chain.
+                </p>
+                <label class="voting-period"
+                  >Voting period (days)<input
+                    v-model="proposalDays"
+                    type="number"
+                    min="1"
+                    max="30"
+                    required /></label
                 ><button
-                  class="primary"
+                  class="primary wide"
                   :disabled="actionDisabled || proposalText.trim().length < 10"
                   type="submit"
                 >
                   {{ !configured ? "Preview proposal" : "Publish proposal"
                   }}<Icon :size="18" />
                 </button>
-              </div>
-            </div>
-          </form>
-          <div class="section-heading proposal-heading">
-            <h2>Community proposals</h2>
-            <span class="results-count"
-              >{{ visibleProposals.length }}
-              {{
-                visibleProposals.length === 1 ? "proposal" : "proposals"
-              }}</span
-            >
-          </div>
-          <div
-            v-if="configured && reading && !visibleProposals.length"
-            class="skeleton"
-            role="status"
-          >
-            <span class="sr-only">Loading proposals</span>
-          </div>
-          <div
-            v-if="configured && !reading && !visibleProposals.length"
-            class="empty"
-          >
-            <Icon name="governance" :size="32" />
-            <h2>
-              {{
-                readError ? "Proposals are unavailable." : "The floor is yours."
-              }}
-            </h2>
-            <p>
-              {{
-                readError
-                  ? "Use Try again above to reconnect."
-                  : "Start the first Quorivana discussion with a clear idea and a voting period."
-              }}
-            </p>
-            <button
-              v-if="!readError && !showProposal"
-              class="outline"
-              @click="toggleProposal"
-            >
-              Create the first proposal
-            </button>
-          </div>
-          <div class="proposal-list">
-            <article
-              v-for="p in visibleProposals"
-              :key="p.id"
-              class="proposal panel"
-            >
-              <div class="proposal-copy">
-                <div class="proposal-meta">
-                  <span class="tiny-label">{{
-                    p.sample
-                      ? "SAMPLE PROPOSAL"
-                      : "PROPOSAL / " + String(p.id).padStart(3, "0")
-                  }}</span
-                  ><span
-                    class="badge"
-                    :class="{ open: proposalStatus(p) === 'Open' }"
-                    >{{ proposalStatus(p) }}</span
-                  >
-                </div>
-                <h2>{{ p.description }}</h2>
-                <p>
-                  <Icon name="clock" :size="15" />{{
-                    p.sample
-                      ? "Example only · no live votes"
-                      : "Voting ends " + date(p.endsAt)
-                  }}
-                </p>
-              </div>
-              <div class="vote">
-                <div class="vote-totals">
-                  <span
-                    >For <b>{{ units(p.forVotes) }}</b></span
-                  ><span
-                    >Against <b>{{ units(p.againstVotes) }}</b></span
-                  >
-                </div>
-                <div
-                  class="vote-bar"
-                  role="img"
-                  :aria-label="
-                    p.forVotes + p.againstVotes === 0n
-                      ? 'No votes cast'
-                      : votePercent(p) + ' percent support'
-                  "
-                >
-                  <i :style="{ width: votePercent(p) + '%' }"></i>
-                </div>
-                <small>{{
-                  p.forVotes + p.againstVotes === 0n
-                    ? "Waiting for the first vote"
-                    : votePercent(p) + "% of cast weight supports this"
-                }}</small>
-                <div class="vote-buttons">
-                  <button
-                    class="outline"
-                    :disabled="
-                      actionDisabled ||
-                      (!p.sample && proposalStatus(p) !== 'Open')
-                    "
-                    @click="vote(p, true)"
-                  >
-                    <Icon name="check" :size="16" />Vote For</button
+                <div class="editor-actions">
+                  <button class="quiet" type="button" @click="toggleProposal">
+                    Keep draft & close</button
                   ><button
-                    class="outline"
-                    :disabled="
-                      actionDisabled ||
-                      (!p.sample && proposalStatus(p) !== 'Open')
-                    "
-                    @click="vote(p, false)"
+                    v-if="proposalText"
+                    class="quiet"
+                    type="button"
+                    @click="clearDraft"
                   >
-                    <Icon name="close" :size="16" />Vote Against
+                    Clear draft</button
+                  ><button
+                    v-else-if="clearedDraft"
+                    class="quiet"
+                    type="button"
+                    @click="undoClearDraft"
+                  >
+                    Undo clear
                   </button>
                 </div>
-                <p v-if="p.voted" class="vote-recorded">
-                  <Icon name="check" :size="15" />Your vote is recorded.
+              </form>
+              <div class="voting-guide">
+                <span class="eyebrow">A THOUGHTFUL PROPOSAL</span>
+                <ol>
+                  <li>
+                    <span>01</span>
+                    <div>
+                      <strong>Make it clear</strong>
+                      <p>Describe one decision and why it matters.</p>
+                    </div>
+                  </li>
+                  <li>
+                    <span>02</span>
+                    <div>
+                      <strong>Give it context</strong>
+                      <p>Include the intended outcome and any budget.</p>
+                    </div>
+                  </li>
+                  <li>
+                    <span>03</span>
+                    <div>
+                      <strong>Leave room to consider</strong>
+                      <p>Choose a voting window of 1–30 days.</p>
+                    </div>
+                  </li>
+                </ol>
+              </div>
+            </aside>
+            <div class="proposal-feed">
+              <div class="section-heading proposal-heading">
+                <h2>Community proposals</h2>
+                <span class="count-badge">{{ visibleProposals.length }}</span>
+              </div>
+              <div
+                v-if="configured && reading && !visibleProposals.length"
+                class="skeleton"
+                role="status"
+              >
+                <span class="sr-only">Loading proposals</span>
+              </div>
+              <div
+                v-if="configured && !reading && !visibleProposals.length"
+                class="empty"
+              >
+                <Icon name="governance" :size="32" />
+                <h2>
+                  {{
+                    readError
+                      ? "Proposals are unavailable."
+                      : "The floor is yours."
+                  }}
+                </h2>
+                <p>
+                  {{
+                    readError
+                      ? "Use Try again above to reconnect."
+                      : "Start the first Pactelora discussion with a clear idea and a voting period."
+                  }}
+                </p>
+                <button
+                  v-if="!readError && !showProposal"
+                  class="outline"
+                  @click="toggleProposal"
+                >
+                  Create the first proposal
+                </button>
+              </div>
+              <div class="proposal-list">
+                <article
+                  v-for="p in visibleProposals"
+                  :key="p.id"
+                  class="proposal panel"
+                >
+                  <div class="proposal-copy">
+                    <div class="proposal-meta">
+                      <span class="tiny-label">{{
+                        p.sample
+                          ? "SAMPLE PROPOSAL"
+                          : "PROPOSAL / " + String(p.id).padStart(3, "0")
+                      }}</span
+                      ><span
+                        class="badge"
+                        :class="{ open: proposalStatus(p) === 'Open' }"
+                        >{{ proposalStatus(p) }}</span
+                      >
+                    </div>
+                    <h2>{{ p.description }}</h2>
+                    <p>
+                      <Icon name="clock" :size="15" />{{
+                        p.sample
+                          ? "Example only · no live votes"
+                          : "Voting ends " + date(p.endsAt)
+                      }}
+                    </p>
+                  </div>
+                  <div class="vote">
+                    <div class="vote-totals">
+                      <span
+                        ><i class="vote-dot"></i>For
+                        <b>{{ units(p.forVotes) }}</b></span
+                      ><span
+                        ><i class="vote-dot against"></i>Against
+                        <b>{{ units(p.againstVotes) }}</b></span
+                      >
+                    </div>
+                    <div
+                      class="vote-bar"
+                      role="img"
+                      :aria-label="
+                        p.forVotes + p.againstVotes === 0n
+                          ? 'No votes cast'
+                          : votePercent(p) + ' percent support'
+                      "
+                    >
+                      <i :style="{ width: votePercent(p) + '%' }"></i>
+                    </div>
+                    <small>{{
+                      p.forVotes + p.againstVotes === 0n
+                        ? "Waiting for the first vote"
+                        : votePercent(p) + "% of cast weight supports this"
+                    }}</small>
+                    <div class="vote-buttons">
+                      <button
+                        class="outline"
+                        :disabled="
+                          actionDisabled ||
+                          (!p.sample && proposalStatus(p) !== 'Open')
+                        "
+                        @click="vote(p, true)"
+                      >
+                        <Icon name="check" :size="16" />Vote For</button
+                      ><button
+                        class="outline"
+                        :disabled="
+                          actionDisabled ||
+                          (!p.sample && proposalStatus(p) !== 'Open')
+                        "
+                        @click="vote(p, false)"
+                      >
+                        <Icon name="close" :size="16" />Vote Against
+                      </button>
+                    </div>
+                    <p v-if="p.voted" class="vote-recorded">
+                      <Icon name="check" :size="15" />Your vote is recorded.
+                    </p>
+                  </div>
+                </article>
+              </div>
+              <div class="form-note governance-note">
+                <Icon name="info" />
+                <p>
+                  One vote per wallet per proposal. Voting weight follows the
+                  connected contract’s rules. Your current balance may differ
+                  from eligible voting weight.
                 </p>
               </div>
-            </article>
-          </div>
-          <div class="form-note governance-note">
-            <Icon name="info" />
-            <p>
-              One vote per wallet per proposal. Voting weight follows the
-              connected contract’s snapshot rules, using eligible token and
-              staked balances. Your current balance may differ.
-            </p>
+            </div>
           </div>
         </section>
 
-        <section v-if="tab === 'treasury'" class="page">
+        <section v-if="tab === 'treasury'" class="page treasury-page">
           <div class="page-head">
             <div>
-              <span class="eyebrow">04 / VERIFY</span>
-              <h1>Shared resources. Open records.</h1>
+              <span class="eyebrow">VERIFY / FOLLOW THE DETAILS</span>
+              <h1>A shared fund. An open book.</h1>
               <p>
-                A shared ledger, open to everyone. Follow balances and recent
-                contract activity directly from Robinhood Chain.
+                See the community’s resources and the activity behind them, read
+                directly from Robinhood Chain.
               </p>
             </div>
-            <span class="page-stamp"><Icon name="treasury" :size="35" /></span>
+            <span class="page-emblem"><Icon name="treasury" :size="32" /></span>
           </div>
-          <div class="treasury-highlights">
-            <article class="treasury-main">
-              <span class="eyebrow">TREASURY BALANCE</span
-              ><strong
-                >{{ ready && treasuryKnown ? units(treasuryBalance) : "—" }}
-                <small>{{ tokenSymbol }}</small></strong
-              ><span>{{ tokenIdentity }}</span>
-            </article>
-            <article class="treasury-secondary">
-              <Icon name="wallet" />
-              <div>
-                <span>Treasury gas balance</span
-                ><strong
-                  >{{ ready && treasuryKnown ? units(treasuryNative, 6) : "—" }}
-                  <small>Testnet ETH</small></strong
-                >
-              </div>
-            </article>
-          </div>
-          <p
-            v-if="treasuryError || (configured && ready && !treasuryKnown)"
-            class="treasury-notice"
-            role="status"
-          >
-            <Icon name="info" :size="17" />{{
-              treasuryError ||
-              "A verified treasury address is not available for this contract. Treasury balances remain unknown."
-            }}
-          </p>
           <div class="treasury-layout">
-            <article class="panel ledger">
-              <h2>By the numbers</h2>
-              <dl>
-                <div>
-                  <dt>On-chain token</dt>
-                  <dd>{{ tokenIdentity }}</dd>
+            <div class="treasury-balances">
+              <article class="treasury-main">
+                <div class="panel-heading">
+                  <span class="eyebrow">TREASURY BALANCE</span
+                  ><Icon name="treasury" :size="24" />
                 </div>
-                <div>
-                  <dt>Total issued {{ tokenSymbol }}</dt>
-                  <dd>{{ ready ? units(totalSupply) : "—" }}</dd>
+                <strong
+                  >{{ ready && treasuryKnown ? units(treasuryBalance) : "—"
+                  }}<small>{{ tokenSymbol }}</small></strong
+                ><span>{{ tokenIdentity }}</span>
+                <div class="treasury-gas">
+                  <Icon name="wallet" :size="19" /><span
+                    >Treasury gas balance</span
+                  ><strong
+                    >{{ ready && treasuryKnown ? units(treasuryNative, 6) : "—"
+                    }}<small>Testnet ETH</small></strong
+                  >
                 </div>
-                <div>
-                  <dt>{{ tokenSymbol }} held by protocol</dt>
-                  <dd>{{ ready ? units(totalStaked) : "—" }}</dd>
-                </div>
-                <div>
-                  <dt>Your {{ tokenSymbol }} balance</dt>
-                  <dd>
-                    {{
-                      connected && accountReady
-                        ? units(token)
-                        : connected
-                          ? "Unavailable"
-                          : "Connect wallet"
-                    }}
-                  </dd>
-                </div>
-                <div>
-                  <dt>Treasury wallet</dt>
-                  <dd>
-                    <a
-                      v-if="treasury"
-                      :href="explorer('address', treasury)"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      >{{ short(treasury)
-                      }}<Icon name="external" :size="15" /></a
-                    ><span v-else>Not available</span>
-                  </dd>
-                </div>
-                <div>
-                  <dt>Token contract</dt>
-                  <dd>
-                    <a
-                      v-if="configured"
-                      :href="explorer('address', CONTRACT_ADDRESS)"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      >{{ short(CONTRACT_ADDRESS)
-                      }}<Icon name="external" :size="15" /></a
-                    ><span v-else>Not configured</span>
-                  </dd>
-                </div>
-                <div>
-                  <dt>Network</dt>
-                  <dd>Robinhood Chain Testnet</dd>
-                </div>
-                <div>
-                  <dt>Chain ID</dt>
-                  <dd>{{ CHAIN_ID }}</dd>
-                </div>
-              </dl>
-              <p class="fine-print">
-                Quorivana is the app brand.
-                {{
-                  configured
-                    ? "The connected contract defines the on-chain token name and symbol."
-                    : "Token details are examples until a deployed contract is configured."
+              </article>
+              <p
+                v-if="treasuryError || (configured && ready && !treasuryKnown)"
+                class="treasury-notice"
+                role="status"
+              >
+                <Icon name="info" :size="17" />{{
+                  treasuryError ||
+                  "A verified treasury address is not available for this contract. Treasury balances remain unknown."
                 }}
               </p>
-            </article>
+              <article class="panel ledger">
+                <div class="panel-heading">
+                  <h2>The details behind the balance</h2>
+                  <Icon name="layers" :size="20" />
+                </div>
+                <dl>
+                  <div>
+                    <dt>On-chain token</dt>
+                    <dd>{{ tokenIdentity }}</dd>
+                  </div>
+                  <div>
+                    <dt>Total issued {{ tokenSymbol }}</dt>
+                    <dd>{{ ready ? units(totalSupply) : "—" }}</dd>
+                  </div>
+                  <div>
+                    <dt>{{ tokenSymbol }} held by protocol</dt>
+                    <dd>{{ ready ? units(totalStaked) : "—" }}</dd>
+                  </div>
+                  <div>
+                    <dt>Your {{ tokenSymbol }} balance</dt>
+                    <dd>
+                      {{
+                        connected && accountReady
+                          ? units(token)
+                          : connected
+                            ? "Unavailable"
+                            : "Connect wallet"
+                      }}
+                    </dd>
+                  </div>
+                </dl>
+                <span class="eyebrow ledger-label"
+                  >NETWORK &amp; ADDRESSES</span
+                >
+                <dl>
+                  <div>
+                    <dt>Treasury wallet</dt>
+                    <dd>
+                      <a
+                        v-if="treasury"
+                        :href="explorer('address', treasury)"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        >{{ short(treasury)
+                        }}<Icon name="external" :size="15" /></a
+                      ><span v-else>Not available</span>
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Token contract</dt>
+                    <dd>
+                      <a
+                        v-if="configured"
+                        :href="explorer('address', CONTRACT_ADDRESS)"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        >{{ short(CONTRACT_ADDRESS)
+                        }}<Icon name="external" :size="15" /></a
+                      ><span v-else>Not configured</span>
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Network</dt>
+                    <dd>Robinhood Chain Testnet</dd>
+                  </div>
+                  <div>
+                    <dt>Chain ID</dt>
+                    <dd>{{ CHAIN_ID }}</dd>
+                  </div>
+                </dl>
+                <p class="fine-print">
+                  Pactelora is the app brand.
+                  {{
+                    configured
+                      ? "The connected contract defines the on-chain token name and symbol."
+                      : "Token details are examples until a deployed contract is configured."
+                  }}
+                </p>
+              </article>
+            </div>
             <article class="panel activity">
               <div class="panel-heading">
-                <h2>Recent activity</h2>
-                <span class="status-dot"></span>
+                <div>
+                  <span class="eyebrow">THE LATEST CHAPTER</span>
+                  <h2>Recent activity</h2>
+                </div>
+                <span class="subtle-badge"
+                  ><span class="status-dot"></span>On-chain</span
+                >
               </div>
               <p class="fine-print">
                 Latest 2,000 blocks. The explorer holds the full history.
@@ -1465,7 +1793,9 @@ function eventDescription(e) {
                 {{ eventsError }}
               </p>
               <div v-if="!activity.length" class="empty compact">
-                <Icon name="clock" :size="28" />
+                <span class="empty-orbit"
+                  ><Icon name="clock" :size="30"
+                /></span>
                 <h3>
                   {{
                     reading
@@ -1500,85 +1830,138 @@ function eventDescription(e) {
                   </div>
                 </li>
               </ol>
+              <div class="activity-note">
+                <Icon name="shield" :size="19" />
+                <p>
+                  Open records help everyone see where the community stands.
+                </p>
+              </div>
             </article>
           </div>
         </section>
-
         <section v-if="tab === 'learn'" class="page learn">
           <div class="page-head">
             <div>
-              <span class="eyebrow">THE QUORIVANA STARTER GUIDE</span>
-              <h1>A little knowledge. A confident start.</h1>
+              <span class="eyebrow">THE PACTELORA GUIDE</span>
+              <h1>Find your feet.<br />Then find your part.</h1>
               <p>
-                You don’t need to know everything to make your first move.
-                Here’s the path from exploring to participating.
+                A few things to know before your first contribution. Follow the
+                path at your own pace.
               </p>
             </div>
-            <span class="page-stamp"><Icon name="learn" :size="35" /></span>
+            <span class="page-emblem peach"
+              ><Icon name="learn" :size="32"
+            /></span>
           </div>
-          <div class="guide-start">
-            <div>
-              <span class="eyebrow">YOUR FIRST FIVE MINUTES</span>
-              <h2>A wallet. A little testnet gas. An open quest.</h2>
-              <p>
-                Connect an EVM wallet, switch to Robinhood Chain Testnet, and
-                get testnet ETH for gas. Then explore an open quest and review
-                its reward before you confirm.
-              </p>
+          <div class="guide-layout">
+            <aside class="guide-start">
+              <span class="round-icon"><Icon name="spark" :size="27" /></span
+              ><span class="eyebrow">YOUR FIRST FIVE MINUTES</span>
+              <h2>A small checklist.<br />A confident start.</h2>
+              <p>Get ready to participate on Robinhood Chain Testnet.</p>
+              <ol class="setup-list">
+                <li>
+                  <span>1</span>
+                  <div>
+                    <strong>Bring an EVM wallet</strong>
+                    <p>Connect to see your balances.</p>
+                  </div>
+                  <Icon v-if="connected" name="check" :size="18" />
+                </li>
+                <li>
+                  <span>2</span>
+                  <div>
+                    <strong>Choose the testnet</strong>
+                    <p>Switch to Robinhood Chain.</p>
+                  </div>
+                  <Icon
+                    v-if="connected && !wrongChain"
+                    name="check"
+                    :size="18"
+                  />
+                </li>
+                <li>
+                  <span>3</span>
+                  <div>
+                    <strong>Add a little gas</strong>
+                    <p>Testnet ETH covers transactions.</p>
+                  </div>
+                </li>
+              </ol>
+              <a
+                class="primary wide"
+                href="https://faucet.testnet.chain.robinhood.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Get testnet ETH <Icon name="external" :size="18" /></a
+              ><button
+                class="text-button wide"
+                :disabled="connecting || busy || switching"
+                @click="connect"
+              >
+                {{ connected ? "Wallet connected" : "Connect your wallet"
+                }}<Icon name="wallet" :size="16" />
+              </button>
+            </aside>
+            <div class="learn-path">
+              <div class="section-heading">
+                <h2>From curious to contributing</h2>
+                <span class="muted-label">Your participation path</span>
+              </div>
+              <article>
+                <span class="guide-number">01</span>
+                <div class="learn-copy">
+                  <span class="tiny-label">START WITH SOMETHING USEFUL</span>
+                  <h2>Make a contribution</h2>
+                  <p>
+                    Quests publish their reward, expiry, and claim cap. Each
+                    wallet can claim once. Open claims do not verify off-chain
+                    work or prove a unique identity.
+                  </p>
+                  <button class="text-button" @click="go('quests')">
+                    Explore quests <Icon :size="17" />
+                  </button>
+                </div>
+                <Icon name="quests" :size="27" />
+              </article>
+              <article>
+                <span class="guide-number">02</span>
+                <div class="learn-copy">
+                  <span class="tiny-label">PUT TIME BEHIND IT</span>
+                  <h2>Make a commitment</h2>
+                  <p>
+                    Lock {{ tokenSymbol }} for 7, 30, 90, or 365 days, without a
+                    separate approval. Rewards are simple and do not compound.
+                    Withdraw principal after the lock ends.
+                  </p>
+                  <button class="text-button" @click="go('stake')">
+                    Explore staking <Icon :size="17" />
+                  </button>
+                </div>
+                <Icon name="stake" :size="27" />
+              </article>
+              <article>
+                <span class="guide-number">03</span>
+                <div class="learn-copy">
+                  <span class="tiny-label">GIVE THE NEXT IDEA A VOICE</span>
+                  <h2>Choose a direction</h2>
+                  <p>
+                    Create a proposal with a 1–30 day voting period, or vote on
+                    an open idea. One vote per wallet. Results are advisory;
+                    treasury actions remain with the steward.
+                  </p>
+                  <button class="text-button" @click="go('governance')">
+                    Explore governance <Icon :size="17" />
+                  </button>
+                </div>
+                <Icon name="governance" :size="27" />
+              </article>
             </div>
-            <a
-              class="primary"
-              href="https://faucet.testnet.chain.robinhood.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              >Get testnet ETH <Icon name="external" :size="18"
-            /></a>
-          </div>
-          <div class="learn-grid">
-            <article>
-              <span class="guide-number">01</span
-              ><Icon name="quests" :size="28" />
-              <h2>Contribute</h2>
-              <p>
-                Quests publish their reward, expiry, and claim cap. Each wallet
-                can claim once. Open claims do not verify off-chain work or
-                prove a unique identity.
-              </p>
-              <button class="text-button" @click="go('quests')">
-                Explore quests <Icon :size="17" />
-              </button>
-            </article>
-            <article>
-              <span class="guide-number">02</span
-              ><Icon name="stake" :size="28" />
-              <h2>Commit</h2>
-              <p>
-                Lock {{ tokenSymbol }} for 7, 30, 90, or 365 days, without a
-                separate approval. Rewards are simple and do not compound.
-                Withdraw principal after the lock ends.
-              </p>
-              <button class="text-button" @click="go('stake')">
-                Explore staking <Icon :size="17" />
-              </button>
-            </article>
-            <article>
-              <span class="guide-number">03</span
-              ><Icon name="governance" :size="28" />
-              <h2>Coordinate</h2>
-              <p>
-                Create a proposal with a 1–30 day voting period, or vote on an
-                open idea. One vote per wallet. Results are advisory; treasury
-                actions remain with the steward.
-              </p>
-              <button class="text-button" @click="go('governance')">
-                Explore governance <Icon :size="17" />
-              </button>
-            </article>
           </div>
           <div class="faq-layout">
-            <div>
+            <div class="faq-intro">
               <span class="eyebrow">A FEW USEFUL ANSWERS</span>
-              <h2>Before you jump in.</h2>
+              <h2>Good to know.</h2>
               <p>
                 Know what you’re signing.<br />Know what stays in your control.
               </p>
@@ -1589,7 +1972,7 @@ function eventDescription(e) {
                 <p>
                   A claim, deposit, withdrawal, proposal, or vote is an on-chain
                   transaction. Check the network and details in your wallet.
-                  Rejecting a request submits nothing. Once submitted, Quorivana
+                  Rejecting a request submits nothing. Once submitted, Pactelora
                   shows a transaction link and its confirmation status.
                 </p>
               </details>
@@ -1603,12 +1986,14 @@ function eventDescription(e) {
                 </p>
               </details>
               <details>
-                <summary>Why is the token name different from Quorivana?</summary>
+                <summary>
+                  Why is the token name different from Pactelora?
+                </summary>
                 <p>
-                  Quorivana is the application brand. Token names and symbols come
-                  from the connected contract: {{ tokenIdentity }}. A visual
-                  rebrand does not change an existing token, address, balance,
-                  or signing domain.
+                  Pactelora is the application brand. Token names and symbols
+                  come from the connected contract: {{ tokenIdentity }}. A
+                  visual rebrand does not change an existing token, address,
+                  balance, or signing domain.
                 </p>
               </details>
               <details>
@@ -1621,9 +2006,9 @@ function eventDescription(e) {
                 </p>
               </details>
               <details>
-                <summary>Is Quorivana an official Robinhood product?</summary>
+                <summary>Is Pactelora an official Robinhood product?</summary>
                 <p>
-                  No. Quorivana is an independent community project built on
+                  No. Pactelora is an independent community project built on
                   Robinhood Chain Testnet. It is not affiliated with or endorsed
                   by Robinhood Markets.
                 </p>
@@ -1646,9 +2031,12 @@ function eventDescription(e) {
       </main>
       <footer>
         <span
-          >© 2026 Quorivana <span class="footer-separator">/</span> Every contribution.
-          A common direction.</span
-        ><span>Robinhood Chain Testnet · Independent community project</span>
+          >© 2026 Pactelora <span class="footer-separator">·</span> Small
+          actions. Shared purpose.</span
+        ><span
+          >Independent community project
+          <span class="footer-dot"></span> Robinhood Chain Testnet</span
+        >
       </footer>
     </div>
     <aside
@@ -1674,13 +2062,13 @@ function eventDescription(e) {
           :href="explorer('tx', txState.hash)"
           target="_blank"
           rel="noopener noreferrer"
-          >View transaction {{ short(txState.hash) }}
-          <Icon name="external" :size="14"
+          >View transaction {{ short(txState.hash)
+          }}<Icon name="external" :size="14"
         /></a>
       </div>
       <button
         v-if="!busy"
-        class="dismiss"
+        class="dismiss icon-button"
         aria-label="Dismiss transaction status"
         @click="txState = { stage: 'idle', label: '', message: '', hash: '' }"
       >

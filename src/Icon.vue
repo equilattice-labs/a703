@@ -4,6 +4,9 @@ defineProps({
   size: { type: [Number, String], default: 20 },
 });
 const paths = {
+  pulse: "M2 12h5l3-8 4 16 3-8h5",
+  chevron: "m6 9 6 6 6-6",
+  layers: "m12 3 10 5-10 5L2 8z M2 12l10 5 10-5 M2 16l10 5 10-5",
   menu: "M4 6h16 M4 12h16 M4 18h16",
   home: "M3 3h7v7H3z M14 3h7v7h-7z M3 14h7v7H3z M14 14h7v7h-7z",
   quests: "M4 3h16v18H4z M8 8l2 2 5-5 M8 14h8 M8 17h5",
@@ -35,8 +38,8 @@ const paths = {
     fill="none"
     stroke="currentColor"
     stroke-width="1.5"
-    stroke-linecap="square"
-    stroke-linejoin="miter"
+    stroke-linecap="round"
+    stroke-linejoin="round"
     aria-hidden="true"
     focusable="false"
   >

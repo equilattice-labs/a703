@@ -1,19 +1,29 @@
-Quorivana
-Positioning: Community coordination. Participation with a shared purpose.
-Tagline: Every contribution, a common direction.
-Brand slug: quorivana
-Uppercase brand: QUORIVANA (not a token symbol)
-Candidate X handle: @quorivana — ownership unconfirmed; not an official link.
-Candidate domain: quorivana.xyz — ownership unconfirmed; not an official launch destination.
+Pactelora
+Small actions. Shared purpose.
+小小行动，共同所向。
+
+Name: pact + telos; a shared agreement and a common purpose.
+Positioning: Community action, connected by a shared purpose.
+Slug: pactelora
+Uppercase: PACTELORA (brand styling, not a token symbol)
+Preferred domain candidate: pactelora.xyz
+Additional domain candidates: pactelora.fun, pactelora.top
+X candidate: @pactelora
+Ownership is unconfirmed. Check evidence is recorded in output/branding/pactelora/research.md; candidates are not official launch links.
 
 Product: community quests, testnet staking, advisory proposals, and treasury visibility.
-Visual identity: ivory #f4f1e8, ink #182823, cobalt #2454e6; a community coordination workspace.
+Navigation: six focused work areas for overview, quests, staking, governance, treasury, and guide.
+Layout: persistent sidebar with a dark community dashboard and dedicated task panels.
+Palette: background #17151f, panels #211e2b, lavender #c4b5fd, apricot #f3b99f, white #f6f3fa.
+Mark: four interwoven rings forming a rosette around a shared center.
+
 Network: Robinhood Chain Testnet (chain ID 46630)
-RPC URL: https://rpc.testnet.chain.robinhood.com/rpc
+RPC: https://rpc.testnet.chain.robinhood.com/rpc
 Explorer: https://explorer.testnet.chain.robinhood.com
 
-Contract configuration: preserve VITE_TOKEN_CONTRACT_ADDRESS. A new installation must configure its intended deployment before sending transactions.
-Token labels: read name() and symbol() from the configured contract. Application branding does not rename that token or its permit signing domain.
-Local source identity: Deedluma / DLU. Recorded configured deployment identity: Robinhood Impact / RHI. The app reads the configured contract's actual name and symbol.
-No new Quorivana deployment or token issuance is asserted. An unconfigured app displays explicitly labeled samples.
+Preserve VITE_TOKEN_CONTRACT_ADDRESS and all existing environment keys. A new installation must configure its intended deployment before sending transactions.
+Token labels read name() and symbol() from the configured contract. Application branding does not rename that token or its permit signing domain.
+Local source identity: Deedluma / DLU.
+Recorded deployment identity: Robinhood Impact / RHI; live labels follow the configured contract.
+No new Pactelora token or deployment is asserted. Unconfigured applications show labeled samples.
 Governance votes are advisory and do not automatically transfer treasury funds. Test tokens have no promised monetary value or returns.
