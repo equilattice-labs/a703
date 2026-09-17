@@ -38,7 +38,7 @@ export function useQuorivana() {
   const explorer = (kind, value) => `${EXPLORER_URL}/${kind}/${value}`
   function readableError(e) {
     if (e.code === 4001 || e.code === 'ACTION_REJECTED') return 'Request cancelled in your wallet. Nothing was submitted.'
-    if (e.code === 'INSUFFICIENT_FUNDS') return 'You need testnet USDC to pay transaction gas.'
+    if (e.code === 'INSUFFICIENT_FUNDS') return 'You need testnet ETH to pay transaction gas.'
     const name = e.revert?.name || e.reason?.split('(')[0]
     if (name === 'ERC20InsufficientBalance') return `Your ${tokenSymbol.value} balance is too low.`
     if (ERRORS[name]) return ERRORS[name]
@@ -194,7 +194,7 @@ export function useQuorivana() {
           ethereum.request({ method: 'eth_accounts' }), ethereum.request({ method: 'eth_chainId' })
         ])
         chain.value = chainNumber(network)
-        if (chain.value !== CHAIN_ID) throw new Error('Switch to Arc Chain Testnet before submitting.')
+        if (chain.value !== CHAIN_ID) throw new Error('Switch to Robinhood Chain Testnet before submitting.')
         if (epoch !== accountEpoch || ethereum !== window.ethereum || wallet.value.toLowerCase() !== address.toLowerCase() || addresses[0]?.toLowerCase() !== address.toLowerCase()) {
           throw new Error('Your wallet account or network changed. Review the current account and try again.')
         }
@@ -226,7 +226,7 @@ export function useQuorivana() {
       txState.value = { stage: 'pending', label, message: 'Submitted. Waiting for confirmation...', hash: result.hash }
       const receipt = await result.wait()
       if (!receipt || receipt.status !== 1) throw new Error('The transaction reverted.')
-      txState.value = { stage: 'success', label, message: 'Confirmed on Arc Chain.', hash: receipt.hash }
+      txState.value = { stage: 'success', label, message: 'Confirmed on Robinhood Chain.', hash: receipt.hash }
       await refresh(); return true
     } catch (e) {
       if (e.code === 'TRANSACTION_REPLACED' && !e.cancelled && e.receipt?.status === 1) {

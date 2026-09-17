@@ -525,7 +525,7 @@ function eventDescription(e) {
       <div v-if="wrongChain" class="notice warning-notice" role="alert">
         <Icon name="info" />
         <p>
-          Your wallet is on another network. Read data is from Arc Chain
+          Your wallet is on another network. Read data is from Robinhood Chain
           Testnet.
         </p>
         <button
@@ -831,7 +831,6 @@ function eventDescription(e) {
             </button>
           </div>
           <div class="quest-grid">
-<<<<<<< HEAD
             <article v-for="(q, index) in visibleQuests" :key="q.id" class="quest-card" :id="'quest-' + q.id" :aria-labelledby="'quest-title-' + q.id" tabindex="-1">
               <div class="quest-index"><span>{{ String(index + 1).padStart(2, "0") }}</span><Icon :name="['learn', 'spark', 'treasury'][index % 3]" :size="24" /></div>
               <div class="quest-main">
@@ -842,58 +841,6 @@ function eventDescription(e) {
                   <div><span>{{ q.claims.toLocaleString() }} / {{ q.maxClaims.toLocaleString() }} claimed</span><span>{{ Math.max(0, q.maxClaims - q.claims).toLocaleString() }} left</span></div>
                   <progress :value="q.claims" :max="q.maxClaims || 1" :aria-label="q.claims + ' of ' + q.maxClaims + ' claims used'"></progress>
                   <span><Icon name="clock" :size="14" /> Closes {{ date(q.expiresAt) }}</span>
-=======
-            <article
-              v-for="(q, index) in visibleQuests"
-              :key="q.id"
-              class="quest-card"
-              :id="'quest-' + q.id"
-              :aria-labelledby="'quest-title-' + q.id"
-              tabindex="-1"
-            >
-              <div class="quest-card-top">
-                <span class="quest-emblem" :class="'emblem-' + (index % 3)"
-                  ><Icon
-                    :name="['learn', 'spark', 'treasury'][index % 3]"
-                    :size="28" /></span
-                ><span
-                  class="badge"
-                  :class="{ open: questStatus(q) === 'Open' }"
-                  >{{ questStatus(q) }}</span
-                >
-              </div>
-              <span class="tiny-label">{{
-                q.sample
-                  ? "EXAMPLE / 0" + (index + 1)
-                  : "QUEST / " + String(q.id).padStart(3, "0")
-              }}</span>
-              <h2 :id="'quest-title-' + q.id">{{ q.title }}</h2>
-              <p>
-                {{
-                  q.sample
-                    ? q.detail
-                    : "An open participation reward. Claiming is recorded on Arc Chain. No off-chain work is verified by this claim."
-                }}
-              </p>
-              <div class="quest-reward">
-                <span>Reward <small v-if="q.sample">· example</small></span
-                ><strong
-                  >{{ units(q.reward) }}
-                  <small>{{ tokenSymbol }}</small></strong
-                >
-              </div>
-              <div v-if="!q.sample" class="quest-cap">
-                <div>
-                  <span
-                    >{{ q.claims.toLocaleString() }} /
-                    {{ q.maxClaims.toLocaleString() }} claimed</span
-                  ><span
-                    >{{
-                      Math.max(0, q.maxClaims - q.claims).toLocaleString()
-                    }}
-                    left</span
-                  >
->>>>>>> 02544ec4d539c11f8395692ccf231da74fce23fe
                 </div>
               </div>
               <div class="quest-action">
@@ -1056,7 +1003,7 @@ function eventDescription(e) {
                   >
                 </div>
                 <div>
-                  <span>Network gas</span><span>Paid in testnet USDC</span>
+                  <span>Network gas</span><span>Paid in testnet ETH</span>
                 </div>
               </div>
               <div class="form-note">
@@ -1130,7 +1077,7 @@ function eventDescription(e) {
                 </div>
                 <div v-if="connected" class="position-detail">
                   <span>Gas balance</span
-                  ><b>{{ accountReady ? units(native, 6) : "?" }} USDC</b>
+                  ><b>{{ accountReady ? units(native, 6) : "?" }} ETH</b>
                 </div>
                 <button
                   v-if="!connected"
@@ -1400,7 +1347,7 @@ function eventDescription(e) {
               <h1>Shared resources. Open records.</h1>
               <p>
                 A shared ledger, open to everyone. Follow balances and recent
-                contract activity directly from Arc Chain.
+                contract activity directly from Robinhood Chain.
               </p>
             </div>
             <span class="page-stamp"><Icon name="treasury" :size="35" /></span>
@@ -1419,7 +1366,7 @@ function eventDescription(e) {
                 <span>Treasury gas balance</span
                 ><strong
                   >{{ ready && treasuryKnown ? units(treasuryNative, 6) : "—" }}
-                  <small>Testnet USDC</small></strong
+                  <small>Testnet ETH</small></strong
                 >
               </div>
             </article>
@@ -1490,7 +1437,7 @@ function eventDescription(e) {
                 </div>
                 <div>
                   <dt>Network</dt>
-                  <dd>Arc Chain Testnet</dd>
+                  <dd>Robinhood Chain Testnet</dd>
                 </div>
                 <div>
                   <dt>Chain ID</dt>
@@ -1574,17 +1521,17 @@ function eventDescription(e) {
               <span class="eyebrow">YOUR FIRST FIVE MINUTES</span>
               <h2>A wallet. A little testnet gas. An open quest.</h2>
               <p>
-                Connect an EVM wallet, switch to Arc Chain Testnet, and
-                get testnet USDC for gas. Then explore an open quest and review
+                Connect an EVM wallet, switch to Robinhood Chain Testnet, and
+                get testnet ETH for gas. Then explore an open quest and review
                 its reward before you confirm.
               </p>
             </div>
             <a
               class="primary"
-              href="https://faucet.circle.com"
+              href="https://faucet.testnet.chain.robinhood.com"
               target="_blank"
               rel="noopener noreferrer"
-              >Get testnet USDC <Icon name="external" :size="18"
+              >Get testnet ETH <Icon name="external" :size="18"
             /></a>
           </div>
           <div class="learn-grid">
@@ -1674,19 +1621,11 @@ function eventDescription(e) {
                 </p>
               </details>
               <details>
-<<<<<<< HEAD
                 <summary>Is Quorivana an official Robinhood product?</summary>
                 <p>
                   No. Quorivana is an independent community project built on
                   Robinhood Chain Testnet. It is not affiliated with or endorsed
                   by Robinhood Markets.
-=======
-                <summary>Is Ralliva an official Arc Chain product?</summary>
-                <p>
-                  No. Ralliva is an independent community project built on
-                  Arc Chain Testnet. It is not affiliated with or endorsed
-                  by Circle.
->>>>>>> 02544ec4d539c11f8395692ccf231da74fce23fe
                 </p>
               </details>
               <details>
@@ -1707,15 +1646,9 @@ function eventDescription(e) {
       </main>
       <footer>
         <span
-<<<<<<< HEAD
           >© 2026 Quorivana <span class="footer-separator">/</span> Every contribution.
           A common direction.</span
         ><span>Robinhood Chain Testnet · Independent community project</span>
-=======
-          >© 2026 Ralliva <span class="footer-separator">/</span> Small actions.
-          Common ground.</span
-        ><span>Arc Chain Testnet · Independent community project</span>
->>>>>>> 02544ec4d539c11f8395692ccf231da74fce23fe
       </footer>
     </div>
     <aside
