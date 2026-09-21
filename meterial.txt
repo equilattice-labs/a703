@@ -1,29 +1,25 @@
-Pactelora
-Small actions. Shared purpose.
-小小行动，共同所向。
+Actobraid / actobraid / ACTOBRAID
+Good work. Shared momentum.
+各尽其力，一同向前。
 
-Name: pact + telos; a shared agreement and a common purpose.
-Positioning: Community action, connected by a shared purpose.
-Slug: pactelora
-Uppercase: PACTELORA (brand styling, not a token symbol)
-Preferred domain candidate: pactelora.xyz
-Additional domain candidates: pactelora.fun, pactelora.top
-X candidate: @pactelora
-Ownership is unconfirmed. Check evidence is recorded in output/branding/pactelora/research.md; candidates are not official launch links.
+Meaning: Action + braid; individual actions woven into shared progress.
+Product: community quests, testnet staking, advisory proposals and public treasury activity.
+Preferred domain candidate: actobraid.xyz
+Alternatives: actobraid.fun / actobraid.top
+X candidate: @actobraid / https://x.com/actobraid
+Check results and dates: output/branding/actobraid/research.md and list.txt.
+Destinations have not been registered or acquired by this update.
 
-Product: community quests, testnet staking, advisory proposals, and treasury visibility.
-Navigation: six focused work areas for overview, quests, staking, governance, treasury, and guide.
-Layout: persistent sidebar with a dark community dashboard and dedicated task panels.
-Palette: background #17151f, panels #211e2b, lavender #c4b5fd, apricot #f3b99f, white #f6f3fa.
-Mark: four interwoven rings forming a rosette around a shared center.
+Visual: warm paper #f6f5f0, forest #173c32, citron #d9ee77, restrained gray-green rules.
+Identity: three advancing steps, editorial serif headlines, clear sans-serif controls.
+Experience: top navigation; action-led overview, searchable quest list, staking setup and review, proposal editor, treasury ledger and participation guide.
+Routes: #home / #quests / #stake / #governance / #treasury / #learn.
+Mobile: compact header and expanded navigation with keyboard focus and Escape support.
 
-Network: Robinhood Chain Testnet (chain ID 46630)
+Network: Robinhood Chain Testnet, chain ID 46630.
 RPC: https://rpc.testnet.chain.robinhood.com/rpc
 Explorer: https://explorer.testnet.chain.robinhood.com
-
-Preserve VITE_TOKEN_CONTRACT_ADDRESS and all existing environment keys. A new installation must configure its intended deployment before sending transactions.
-Token labels read name() and symbol() from the configured contract. Application branding does not rename that token or its permit signing domain.
-Local source identity: Deedluma / DLU.
-Recorded deployment identity: Robinhood Impact / RHI; live labels follow the configured contract.
-No new Pactelora token or deployment is asserted. Unconfigured applications show labeled samples.
-Governance votes are advisory and do not automatically transfer treasury funds. Test tokens have no promised monetary value or returns.
+Preserve existing environment values and VITE_TOKEN_CONTRACT_ADDRESS.
+Token name and symbol come from the configured contract. Local source retains Deedluma / DLU and its permit signing domain; recorded deployment identity is Robinhood Impact / RHI.
+No new token is issued by the application brand. Unconfigured applications show labeled examples.
+Votes are advisory, without automatic treasury execution. Test tokens have no promised monetary value or returns.
