@@ -1,25 +1,28 @@
-Actobraid / actobraid / ACTOBRAID
-Good work. Shared momentum.
-各尽其力，一同向前。
+Kivoraft / kivoraft / KVRF (provisional preview label, not an issued symbol)
+Build together. Move on-chain.
+Meaning: kin + orbit + craft; community actions built into a shared route.
+Preferred domain candidate: kivoraft.xyz; alternatives: kivoraft.fun / kivoraft.top.
+X candidate: @kivoraft. Availability evidence: output/branding/kivoraft/research.md.
+No domain or social account was registered, acquired, reserved, or published by this update.
 
-Meaning: Action + braid; individual actions woven into shared progress.
-Product: community quests, testnet staking, advisory proposals and public treasury activity.
-Preferred domain candidate: actobraid.xyz
-Alternatives: actobraid.fun / actobraid.top
-X candidate: @actobraid / https://x.com/actobraid
-Check results and dates: output/branding/actobraid/research.md and list.txt.
-Destinations have not been registered or acquired by this update.
-
-Visual: warm paper #f6f5f0, forest #173c32, citron #d9ee77, restrained gray-green rules.
-Identity: three advancing steps, editorial serif headlines, clear sans-serif controls.
-Experience: top navigation; action-led overview, searchable quest list, staking setup and review, proposal editor, treasury ledger and participation guide.
+Visual: dark crypto community interface with mint teal, cyan, and amber accents.
+Experience: overview, preview quests, token status, advisory governance,
+read-only treasury details, and a participation guide. Token locking and rewards
+are disabled until a mint and token custody/funding rules are supplied.
 Routes: #home / #quests / #stake / #governance / #treasury / #learn.
-Mobile: compact header and expanded navigation with keyboard focus and Escape support.
+Mobile: expandable navigation, compact ledger cards, no horizontal overflow.
 
-Network: Robinhood Chain Testnet, chain ID 46630.
-RPC: https://rpc.testnet.chain.robinhood.com/rpc
-Explorer: https://explorer.testnet.chain.robinhood.com
-Preserve existing environment values and VITE_TOKEN_CONTRACT_ADDRESS.
-Token name and symbol come from the configured contract. Local source retains Deedluma / DLU and its permit signing domain; recorded deployment identity is Robinhood Impact / RHI.
-No new token is issued by the application brand. Unconfigured applications show labeled examples.
-Votes are advisory, without automatic treasury execution. Test tokens have no promised monetary value or returns.
+Network: Solana Testnet (`solana:testnet`).
+RPC: https://api.testnet.solana.com
+Explorer: https://explorer.solana.com/?cluster=testnet
+No token mint has been supplied. KVRF is a temporary UI label only. A provided
+mint can enable read-only supply and SPL balance reads; it does not enable token
+actions. The Anchor community program is implemented and locally integration
+tested. Its interface records quest participation and advisory votes only.
+The community program is deployed at
+`D7nYqa5Y1a2MQqDQb1NpU5kVS7TxDrj92mbCY9UitHq6` on Testnet. Its interface records
+quest participation and advisory votes only. Mint decimals come from Solana RPC.
+Name and ticker metadata remain pending; environment values are display labels only.
+
+The old Solidity project is kept under `contracts/` as historical EVM material.
+It is not a Solana program and its deployment entrypoint is disabled.

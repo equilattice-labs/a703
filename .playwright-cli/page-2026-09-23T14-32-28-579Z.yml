@@ -1,0 +1,92 @@
+- generic [ref=e189]:
+  - link "Skip to content":
+    - /url: "#main"
+  - banner [ref=e190]:
+    - button "Kivoraft home" [ref=e191] [cursor=pointer]:
+      - generic [ref=e192]:
+        - text: kivoraft
+        - generic [ref=e193]: A collective in motion
+    - navigation "Main navigation" [ref=e194]:
+      - button "Overview" [ref=e195] [cursor=pointer]
+      - button "Quests" [ref=e196] [cursor=pointer]
+      - button "Token" [ref=e197] [cursor=pointer]
+      - button "Governance" [ref=e198] [cursor=pointer]
+      - button "Treasury" [ref=e199] [cursor=pointer]
+      - button "Guide" [ref=e200] [cursor=pointer]
+    - generic [ref=e201]:
+      - generic "Solana Devnet selected" [ref=e202]: devnet
+      - button "Connect wallet" [ref=e204] [cursor=pointer]
+  - generic [ref=e208]:
+    - main [active] [ref=e209]:
+      - generic [ref=e210]:
+        - paragraph [ref=e214]:
+          - strong [ref=e215]: Preview mode.
+          - text: No token mint is configured and the community program is not connected. Sample content is shown; actions submit nothing.
+        - button "How it works" [ref=e216] [cursor=pointer]
+      - generic [ref=e258]:
+        - generic [ref=e260]:
+          - generic [ref=e261]: 01 / THE CONTRIBUTION BOARD
+          - heading "Find your part." [level=1] [ref=e262]
+          - paragraph [ref=e263]: Browse on-chain contribution records. Claims record wallet participation only; they do not pay a token reward or verify off-chain work.
+        - generic [ref=e267]:
+          - generic [ref=e268]:
+            - generic [ref=e269]:
+              - generic [ref=e272]: Search quests
+              - searchbox "Search quests" [ref=e273]
+            - group "Filter quests" [ref=e274]:
+              - button "all 3" [pressed] [ref=e275] [cursor=pointer]:
+                - text: all
+                - generic [ref=e276]: "3"
+              - button "sample" [ref=e277] [cursor=pointer]
+            - status [ref=e278]: 3 quests
+          - generic [ref=e279]:
+            - article [ref=e280]:
+              - generic [ref=e281]:
+                - generic [ref=e282]: "01"
+                - generic [ref=e283]: Sample
+              - generic [ref=e284]:
+                - generic [ref=e285]: EXAMPLE QUEST
+                - heading "Read the Kivoraft charter" [level=2] [ref=e286]
+                - paragraph [ref=e287]: A sample welcome quest. Learn how rewards and stewardship work.
+              - generic [ref=e288]:
+                - generic [ref=e289]:
+                  - generic [ref=e290]: Reward · example
+                  - strong [ref=e291]: 12 KVRF
+                - button "Preview quest" [ref=e292] [cursor=pointer]
+            - article [ref=e295]:
+              - generic [ref=e296]:
+                - generic [ref=e297]: "02"
+                - generic [ref=e298]: Sample
+              - generic [ref=e299]:
+                - generic [ref=e300]: EXAMPLE QUEST
+                - heading "Map a useful signal" [level=2] [ref=e301]
+                - paragraph [ref=e302]: A sample research quest. Share a source-backed observation.
+              - generic [ref=e303]:
+                - generic [ref=e304]:
+                  - generic [ref=e305]: Reward · example
+                  - strong [ref=e306]: 28 KVRF
+                - button "Preview quest" [ref=e307] [cursor=pointer]
+            - article [ref=e310]:
+              - generic [ref=e311]:
+                - generic [ref=e312]: "03"
+                - generic [ref=e313]: Sample
+              - generic [ref=e314]:
+                - generic [ref=e315]: EXAMPLE QUEST
+                - heading "Review a treasury route" [level=2] [ref=e316]
+                - paragraph [ref=e317]: A sample review quest. Compare proposals and explain your reasoning.
+              - generic [ref=e318]:
+                - generic [ref=e319]:
+                  - generic [ref=e320]: Reward · example
+                  - strong [ref=e321]: 45 KVRF
+                - button "Preview quest" [ref=e322] [cursor=pointer]
+        - generic [ref=e325]:
+          - generic [ref=e328]:
+            - strong [ref=e329]: Your wallet, your decision.
+            - paragraph [ref=e330]: Review the quest and network before confirming. A preview never sends a transaction.
+          - button "How quests work" [ref=e331] [cursor=pointer]
+    - contentinfo [ref=e253]:
+      - generic [ref=e254]:
+        - text: © 2026 Kivoraft
+        - generic [ref=e255]: ·
+        - text: Build together. Shared momentum.
+      - generic [ref=e256]: Independent community project Solana Devnet

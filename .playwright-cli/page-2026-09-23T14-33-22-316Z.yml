@@ -1,0 +1,67 @@
+- generic [ref=e189]:
+  - link "Skip to content":
+    - /url: "#main"
+  - banner [ref=e190]:
+    - button "Kivoraft home" [ref=e191] [cursor=pointer]:
+      - generic [ref=e192]:
+        - text: kivoraft
+        - generic [ref=e193]: A collective in motion
+    - navigation "Main navigation" [ref=e194]:
+      - button "Overview" [ref=e195] [cursor=pointer]
+      - button "Quests" [ref=e196] [cursor=pointer]
+      - button "Token" [ref=e197] [cursor=pointer]
+      - button "Governance" [ref=e198] [cursor=pointer]
+      - button "Treasury" [ref=e199] [cursor=pointer]
+      - button "Guide" [ref=e200] [cursor=pointer]
+    - generic [ref=e201]:
+      - generic "Solana Devnet selected" [ref=e202]: devnet
+      - button "Connect wallet" [ref=e204] [cursor=pointer]
+  - generic [ref=e208]:
+    - main [active] [ref=e209]:
+      - generic [ref=e210]:
+        - paragraph [ref=e214]:
+          - strong [ref=e215]: Preview mode.
+          - text: No token mint is configured and the community program is not connected. Sample content is shown; actions submit nothing.
+        - button "How it works" [ref=e216] [cursor=pointer]
+      - generic [ref=e334]:
+        - generic [ref=e336]:
+          - generic [ref=e337]: 03 / THE ASSEMBLY
+          - heading "What comes next?" [level=1] [ref=e338]
+          - paragraph [ref=e339]: Put an idea into words, hear other perspectives, and help choose a direction. Votes are advisory; treasury spending remains a separate steward action.
+        - generic [ref=e343]:
+          - complementary [ref=e344]:
+            - generic [ref=e345]:
+              - heading "An idea worth sharing." [level=2] [ref=e346]
+              - paragraph [ref=e347]: Every shared decision begins with someone putting an idea forward.
+              - button "New proposal" [ref=e348] [cursor=pointer]
+          - generic [ref=e351]:
+            - generic [ref=e352]:
+              - heading "Community proposals" [level=2] [ref=e353]
+              - generic [ref=e354]: "1"
+            - article [ref=e356]:
+              - generic [ref=e357]:
+                - generic [ref=e358]:
+                  - generic [ref=e359]: SAMPLE PROPOSAL
+                  - generic [ref=e360]: Sample
+                - heading "Reserve a season budget for community research bounties" [level=2] [ref=e361]
+                - paragraph [ref=e362]: Example only · no live votes
+              - generic [ref=e365]:
+                - generic [ref=e366]:
+                  - generic [ref=e367]:
+                    - text: For
+                    - generic [ref=e369]: "0"
+                  - generic [ref=e370]:
+                    - text: Against
+                    - generic [ref=e372]: "0"
+                - img "No votes cast" [ref=e373]
+                - generic [ref=e374]: Waiting for the first vote
+                - generic [ref=e375]:
+                  - button "Vote For" [ref=e376] [cursor=pointer]
+                  - button "Vote Against" [ref=e379] [cursor=pointer]
+            - paragraph [ref=e385]: One vote per wallet per proposal. Voting weight follows the connected program's rules. Your current balance may differ from eligible voting weight.
+    - contentinfo [ref=e253]:
+      - generic [ref=e254]:
+        - text: © 2026 Kivoraft
+        - generic [ref=e255]: ·
+        - text: Build together. Shared momentum.
+      - generic [ref=e256]: Independent community project Solana Devnet

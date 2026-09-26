@@ -1,31 +1,36 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, nextTick, watch } from "vue";
-import { useActobraid } from "./useActobraid";
-import { CHAIN_ID, CONTRACT_ADDRESS } from "./contract";
-import actobraidMark from "./assets/actobraid-mark.svg";
+import { useKivoraft } from "./useKivoraft";
+import {
+  SOLANA_CLUSTER,
+  SOLANA_NETWORK_NAME,
+  TOKEN_MINT_ADDRESS,
+} from "./solana.js";
+import kivoraftMark from "./assets/kivoraft-mark.svg";
 import Icon from "./Icon.vue";
 
-const actobraid = useActobraid();
+const kivoraft = useKivoraft();
 const {
   configured,
+  mintConfigured,
+  programReady,
   wallet,
   token,
   tokenName,
   tokenSymbol,
+  tokenDecimals,
   native,
   treasury,
   treasuryKnown,
+  treasuryNativeKnown,
+  treasuryTokenKnown,
   treasuryError,
   totalSupply,
   treasuryBalance,
   treasuryNative,
-  totalStaked,
-  apr,
   paused,
   quests,
   proposals,
-  activity,
-  eventsError,
   accountError,
   accountReading,
   accountReady,
@@ -34,29 +39,32 @@ const {
   ready,
   lastRead,
   connected,
-  wrongChain,
   isOwner,
   busy,
-  unlocked,
-  position,
   txState,
   connecting,
-  switching,
   short,
   units,
-  exact,
+  solUnits,
   date,
   explorer,
   notify,
   refresh,
   connect,
-  switchNetwork,
-  transact,
+  disconnectWallet,
+  walletOptions,
+  walletPickerOpen,
+  closeWalletPicker,
+  chooseWallet,
+  claimQuest: recordQuest,
+  createQuest: publishQuest,
+  setQuestActive: changeQuestActive,
+  createProposal: publishProposal,
+  castVote,
   questStatus,
   proposalStatus,
   votePercent,
-  parseAmount,
-} = actobraid;
+} = kivoraft;
 const mobileMenu = ref(false);
 const validTabs = [
   "home",
@@ -99,18 +107,16 @@ onUnmounted(() => {
 const nav = [
   ["home", "Overview"],
   ["quests", "Quests"],
-  ["stake", "Stake"],
+  ["stake", "Token"],
   ["governance", "Governance"],
   ["treasury", "Treasury"],
   ["learn", "Guide"],
 ];
-const stakeAmount = ref(""),
-  lockDays = ref(30),
-  proposalText = ref(""),
+const proposalText = ref(""),
   proposalDays = ref(7),
   showProposal = ref(false);
 const adminTitle = ref(""),
-  adminReward = ref(""),
+  adminDetails = ref(""),
   adminMax = ref(100),
   adminDays = ref(30),
   questFilter = ref("all");
@@ -118,22 +124,22 @@ const samples = [
   {
     id: "sample-1",
     sample: true,
-    title: "Read the Actobraid charter",
-    reward: 12n * 10n ** 18n,
+    title: "Read the Kivoraft charter",
+    reward: 12n * 10n ** 9n,
     detail: "A sample welcome quest. Learn how rewards and stewardship work.",
   },
   {
     id: "sample-2",
     sample: true,
     title: "Map a useful signal",
-    reward: 28n * 10n ** 18n,
+    reward: 28n * 10n ** 9n,
     detail: "A sample research quest. Share a source-backed observation.",
   },
   {
     id: "sample-3",
     sample: true,
     title: "Review a treasury route",
-    reward: 45n * 10n ** 18n,
+    reward: 45n * 10n ** 9n,
     detail:
       "A sample review quest. Compare proposals and explain your reasoning.",
   },
@@ -154,11 +160,12 @@ const clearedDraft = ref(null);
 watch(proposalText, (text) => {
   if (text) clearedDraft.value = null;
 });
-const draftKey = "actobraid-proposal-draft";
+const draftKey = "kivoraft-proposal-draft";
 try {
   // Migrate unfinished drafts from previous application brands once.
   const legacyDraftKeys = [
     "pactelora-proposal-draft",
+    "kivoraft-proposal-draft",
     "quorivana-proposal-draft",
     "ralliva-proposal-draft",
   ];
@@ -222,7 +229,7 @@ async function toggleMenu() {
   document.querySelector('#primary-navigation [aria-current="page"]')?.focus();
 }
 
-const allQuests = computed(() => (configured ? quests.value : samples));
+const allQuests = computed(() => (programReady.value ? quests.value : samples));
 const visibleQuests = computed(() =>
   allQuests.value.filter(
     (q) =>
@@ -238,18 +245,7 @@ const openQuests = computed(
 const openProposals = computed(
   () => proposals.value.filter((p) => proposalStatus(p) === "Open").length,
 );
-const stakeError = computed(() => {
-  if (!stakeAmount.value.trim()) return "";
-  try {
-    const amount = parseAmount(stakeAmount.value);
-    return connected.value && accountReady.value && amount > token.value
-      ? `You only have ${units(token.value)} ${tokenSymbol.value} available.`
-      : "";
-  } catch (e) {
-    return e.message;
-  }
-});
-const metricsAvailable = computed(() => configured && ready.value);
+const metricsAvailable = computed(() => programReady.value && ready.value);
 async function toggleProposal() {
   showProposal.value = !showProposal.value;
   await nextTick();
@@ -284,25 +280,12 @@ function focusMain() {
   document.getElementById("main")?.focus();
 }
 const visibleProposals = computed(() =>
-  configured ? proposals.value : sampleProposals,
+  programReady.value ? proposals.value : sampleProposals,
 );
-const estimate = computed(() => {
-  try {
-    return units(
-      (parseAmount(stakeAmount.value) * apr.value * BigInt(lockDays.value)) /
-        365n /
-        10000n,
-      6,
-    );
-  } catch {
-    return "0";
-  }
-});
 const actionDisabled = computed(
   () =>
     busy.value ||
     connecting.value ||
-    switching.value ||
     (configured &&
       (!ready.value ||
         reading.value ||
@@ -310,71 +293,30 @@ const actionDisabled = computed(
         (connected.value && (!accountReady.value || accountReading.value)))),
 );
 const tokenIdentity = computed(() => {
-  if (!configured)
+  if (!mintConfigured)
     return `${tokenName.value || "Sample token"} (${tokenSymbol.value}) - sample`;
   if (tokenName.value) return `${tokenName.value} (${tokenSymbol.value})`;
   return reading.value
-    ? "Loading token identity..."
-    : "Token identity unavailable";
+    ? "Loading mint data..."
+    : `SPL token (${tokenSymbol.value}); metadata pending`;
 });
 function preview() {
   notify(
-    "This is an example. Explore the workflow here; transactions require a configured contract.",
+    "This is an example. Explore the workflow here; transactions require a configured Solana program.",
     "info",
   );
-}
-async function guard(fn) {
-  try {
-    return await fn();
-  } catch (e) {
-    notify(e.message);
-  }
 }
 async function claim(q) {
   if (q.sample) return preview();
   if (questStatus(q) !== "Open")
     return notify("This quest is not available to claim.");
-  await transact(`Claim quest #${q.id}`, (c) => c.claimQuest(q.id));
-}
-async function stake() {
-  if (stakeError.value) return notify(stakeError.value);
-  if (!configured) return preview();
-  await guard(async () => {
-    let amount;
-    try {
-      amount = parseAmount(stakeAmount.value);
-    } catch (e) {
-      return notify(e.message);
-    }
-    if (![7, 30, 90, 365].includes(Number(lockDays.value)))
-      return notify("Choose a supported lock duration.");
-    if (connected.value && accountReady.value && amount > token.value)
-      return notify(
-        `The amount exceeds your available ${tokenSymbol.value} balance.`,
-      );
-    if (
-      await transact(`Stake ${tokenSymbol.value}`, (c) =>
-        c.stake(amount, Number(lockDays.value) * 86400),
-      )
-    )
-      stakeAmount.value = "";
-  });
-}
-async function claimYield() {
-  await transact("Claim staking yield", (c) => c.claimYield());
-}
-async function unstake() {
-  if (!unlocked.value)
-    return notify(`Your position unlocks on ${date(position.value.unlockAt)}.`);
-  await transact(`Withdraw staked ${tokenSymbol.value}`, (c) => c.unstake());
+  await recordQuest(q);
 }
 async function vote(p, support) {
   if (p.sample) return preview();
   if (proposalStatus(p) !== "Open")
     return notify("Voting is closed or you already voted.");
-  await transact(`Vote ${support ? "For" : "Against"} #${p.id}`, (c) =>
-    c.vote(p.id, support),
-  );
+  await castVote(p, support);
 }
 async function createProposal() {
   const description = proposalText.value.trim();
@@ -386,13 +328,8 @@ async function createProposal() {
     proposalDays.value > 30
   )
     return notify("Voting duration must be 1 to 30 whole days.");
-  if (!configured) return preview();
   const submittedDays = Number(proposalDays.value);
-  if (
-    await transact("Create governance proposal", (c) =>
-      c.createProposal(description, submittedDays * 86400),
-    )
-  ) {
+  if (await publishProposal(description, submittedDays)) {
     // A wallet confirmation may take time; retain any newer draft typed meanwhile.
     if (
       proposalText.value.trim() === description &&
@@ -407,14 +344,11 @@ async function createProposal() {
 }
 async function createQuest() {
   const title = adminTitle.value.trim();
-  if (!title || title.length > 200)
-    return notify("Use a quest title between 1 and 200 characters.");
-  let reward;
-  try {
-    reward = parseAmount(adminReward.value, "Reward");
-  } catch (e) {
-    return notify(e.message);
-  }
+  const details = adminDetails.value.trim();
+  if (!title || new TextEncoder().encode(title).length > 80)
+    return notify("Use a quest title between 1 and 80 UTF-8 bytes.");
+  if (new TextEncoder().encode(details).length > 240)
+    return notify("Quest details must be 240 UTF-8 bytes or fewer.");
   if (
     !Number.isInteger(Number(adminMax.value)) ||
     adminMax.value < 1 ||
@@ -427,46 +361,19 @@ async function createQuest() {
     adminDays.value > 365
   )
     return notify("Expiry must be 1 to 365 whole days from today.");
-  const expiry =
-    Math.floor(Date.now() / 1000) + Number(adminDays.value) * 86400;
-  if (
-    await transact("Publish quest", (c) =>
-      c.createQuest(title, reward, expiry, Number(adminMax.value)),
-    )
-  ) {
+  const expiry = Math.floor(Date.now() / 1000) + Number(adminDays.value) * 86400;
+  if (await publishQuest({
+    title,
+    details,
+    maxClaims: Number(adminMax.value),
+    expiresAt: expiry,
+  })) {
     adminTitle.value = "";
-    adminReward.value = "";
+    adminDetails.value = "";
   }
 }
 async function setQuest(q) {
-  await transact(`${q.active ? "Pause" : "Resume"} quest #${q.id}`, (c) =>
-    c.setQuestActive(q.id, !q.active),
-  );
-}
-function eventDescription(e) {
-  const a = e.args;
-  switch (e.name) {
-    case "QuestCreated":
-      return `Quest #${a.questId} published: ${a.title}`;
-    case "QuestClaimed":
-      return `${short(a.account)} claimed ${units(a.reward)} ${tokenSymbol.value}`;
-    case "Staked":
-      return `${short(a.account)} staked ${units(a.amount)} ${tokenSymbol.value}`;
-    case "YieldClaimed":
-      return `${short(a.account)} claimed ${units(a.amount, 6)} ${tokenSymbol.value} yield`;
-    case "Unstaked":
-      return `${short(a.account)} withdrew ${units(a.principal)} ${tokenSymbol.value}`;
-    case "ProposalCreated":
-      return `Proposal #${a.proposalId} opened`;
-    case "VoteCast":
-      return `${short(a.voter)} voted ${a.support ? "For" : "Against"} on #${a.proposalId}`;
-    case "TreasuryMint":
-      return `${units(a.amount)} ${tokenSymbol.value} issued to ${short(a.treasury)}`;
-    case "QuestStatusChanged":
-      return `Quest #${a.questId} ${a.active ? "resumed" : "paused"}`;
-    default:
-      return e.name.replace(/([a-z])([A-Z])/g, "$1 $2");
-  }
+  await changeQuestActive(q, !q.active);
 }
 </script>
 
@@ -476,10 +383,10 @@ function eventDescription(e) {
       >Skip to content</a
     >
     <header class="site-header" @keydown.esc="closeMenu">
-      <button class="brand" aria-label="Actobraid home" @click="go('home')">
-        <img :src="actobraidMark" width="34" height="34" alt="" />
+      <button class="brand" aria-label="Kivoraft home" @click="go('home')">
+        <img :src="kivoraftMark" width="34" height="34" alt="" />
         <span
-          >actobraid<span class="brand-caption"
+          >kivoraft<span class="brand-caption"
             >A collective in motion</span
           ></span
         >
@@ -503,25 +410,13 @@ function eventDescription(e) {
         <span class="mobile-nav-caption">Small actions. Shared momentum.</span>
       </nav>
       <div class="topbar-actions">
-        <button
-          class="network-button"
-          :class="{ warning: wrongChain }"
-          :disabled="busy || connecting || switching"
-          @click="switchNetwork"
-        >
-          <span class="status-dot"></span
-          >{{
-            switching
-              ? "Switching..."
-              : wrongChain
-                ? "Switch network"
-                : "Testnet"
-          }}<Icon name="chevron" :size="12" />
-        </button>
+        <span class="network-button" :aria-label="`${SOLANA_NETWORK_NAME} selected`">
+          <span class="status-dot"></span>{{ SOLANA_CLUSTER }}
+        </span>
         <button
           class="wallet-button"
-          :disabled="connecting || busy || switching"
-          @click="connect"
+          :disabled="connecting || busy"
+          @click="connected ? disconnectWallet() : connect()"
         >
           <Icon name="wallet" :size="17" /><span>{{
             connecting
@@ -551,28 +446,11 @@ function eventDescription(e) {
     ></button>
     <div class="workspace">
       <main id="main" tabindex="-1">
-        <div v-if="!configured" class="notice preview-notice">
+        <div v-if="!programReady" class="notice preview-notice">
           <span class="notice-symbol"><Icon name="info" :size="17" /></span>
-          <p>
-            <strong>A space to explore.</strong> You’re in preview mode with
-            sample content.
-          </p>
+          <p><strong>Preview mode.</strong> {{ configured ? "The program is not initialized on this cluster. Sample quests and proposals remain visible; actions submit nothing." : mintConfigured ? "Mint data is read-only; sample program content remains until a program is configured. Actions submit nothing." : "No token mint is configured and the community program is not connected. Sample content is shown; actions submit nothing." }}</p>
           <button class="text-button" @click="go('learn')">
             How it works <Icon :size="15" />
-          </button>
-        </div>
-        <div v-if="wrongChain" class="notice warning-notice" role="alert">
-          <Icon name="info" />
-          <p>
-            Your wallet is on another network. Read data is from Robinhood Chain
-            Testnet.
-          </p>
-          <button
-            class="outline"
-            :disabled="busy || connecting || switching"
-            @click="switchNetwork"
-          >
-            Switch network
           </button>
         </div>
         <div v-if="paused" class="notice warning-notice" role="status">
@@ -582,7 +460,7 @@ function eventDescription(e) {
             temporarily unavailable.
           </p>
         </div>
-        <div v-if="configured" class="read-status">
+        <div v-if="mintConfigured || configured || connected" class="read-status">
           <span :class="{ failed: readError }" role="status"
             ><span
               class="status-dot"
@@ -592,19 +470,20 @@ function eventDescription(e) {
               readError
                 ? "Connection needs attention"
                 : reading
-                  ? "Syncing contract data…"
+                  ? "Syncing Solana data..."
                   : "Synced at " + lastRead
             }}</span
           >
           <div>
             <a
-              :href="explorer('address', CONTRACT_ADDRESS)"
+              v-if="mintConfigured"
+              :href="explorer('address', TOKEN_MINT_ADDRESS)"
               target="_blank"
               rel="noopener noreferrer"
-              >View contract <Icon name="external" :size="14" /></a
+              >View Solana address <Icon name="external" :size="14" /></a
             ><button
               :disabled="reading || busy"
-              aria-label="Refresh contract data"
+              aria-label="Refresh Solana data"
               @click="refresh"
             >
               <Icon
@@ -617,7 +496,7 @@ function eventDescription(e) {
         </div>
         <div v-if="readError" class="error-panel" role="alert">
           <div>
-            <strong>We couldn’t sync the contract.</strong>
+            <strong>We could not sync Solana data.</strong>
             <p>{{ readError }}</p>
           </div>
           <button class="outline" :disabled="reading || busy" @click="refresh">
@@ -628,14 +507,13 @@ function eventDescription(e) {
           {{ accountError }}
         </p>
         <p v-if="accountReading" class="account-loading" role="status">
-          Reading your wallet balances and activity…
-        </p>
+          Reading your wallet balances and activity...        </p>
 
         <section v-if="tab === 'home'" class="overview">
           <div class="home-masthead">
-            <span class="eyebrow">A COLLECTIVE IN MOTION</span
+            <span class="eyebrow">ON-CHAIN COMMUNITY</span
             ><span class="edition-label"
-              >ROBINHOOD CHAIN <span> / </span> TESTNET</span
+              >SOLANA <span> / </span> {{ SOLANA_CLUSTER === "mainnet-beta" ? "MAINNET" : SOLANA_CLUSTER.toUpperCase() }}</span
             >
           </div>
           <div class="home-hero">
@@ -729,9 +607,9 @@ function eventDescription(e) {
                 <span class="status-dot"></span
                 >{{
                   metricsAvailable
-                    ? "Live from the contract"
-                    : configured
-                      ? "Awaiting chain data"
+                    ? "Live from Solana"
+                    : mintConfigured
+                      ? "Mint read-only · program pending"
                       : "Preview - sample workspace"
                 }}
               </p>
@@ -743,10 +621,7 @@ function eventDescription(e) {
               ><span>Open quests</span>
             </div>
             <div class="strip-metric">
-              <strong
-                >{{ metricsAvailable ? units(totalStaked, 0) : "-" }}
-                <small>{{ tokenSymbol }}</small></strong
-              ><span>Committed to the protocol</span>
+              <strong>Not configured</strong><span>Token staking</span>
             </div>
             <div class="strip-metric">
               <strong>{{
@@ -783,7 +658,7 @@ function eventDescription(e) {
                     ><strong>{{ q.title }}</strong></span
                   >
                   <span class="row-reward"
-                    >{{ units(q.reward) }}<small>{{ tokenSymbol }}</small></span
+                    >{{ q.sample ? `${units(q.reward)} ${tokenSymbol}` : "Participation only" }}</span
                   ><Icon name="external" :size="21" />
                 </button>
                 <div v-if="!featuredQuests.length" class="empty compact">
@@ -800,7 +675,7 @@ function eventDescription(e) {
                   <p>
                     {{
                       reading
-                        ? "Reading the latest quests from the contract."
+                        ? "Reading the latest quests from Solana."
                         : "Explore the guide while the community prepares its next quests."
                     }}
                   </p>
@@ -832,10 +707,10 @@ function eventDescription(e) {
             </div>
             <button class="route-item" @click="go('stake')">
               <span class="route-top"
-                ><span class="tiny-label">02 / COMMIT</span
+                ><span class="tiny-label">02 / TOKEN DETAILS</span
                 ><Icon name="external" :size="22" /></span
-              ><strong>Give it time.</strong>
-              <p>Build a position. Follow your rewards.</p>
+              ><strong>Plan token features.</strong>
+              <p>Locking and rewards wait for a verified mint and clear terms.</p>
             </button>
             <button class="route-item" @click="go('governance')">
               <span class="route-top"
@@ -859,8 +734,9 @@ function eventDescription(e) {
               <span class="eyebrow">01 / THE CONTRIBUTION BOARD</span>
               <h1>Find your part.</h1>
               <p>
-                Explore quests and claim a testnet reward. Every quest has its
-                own cap and deadline, with one claim per wallet.
+                Browse on-chain contribution records. Claims record wallet
+                participation only; they do not pay a token reward or verify
+                off-chain work.
               </p>
             </div>
             <span class="page-emblem"><Icon name="quests" :size="32" /></span>
@@ -873,12 +749,12 @@ function eventDescription(e) {
                 ><input
                   v-model="search"
                   type="search"
-                  placeholder="Find something to work on…"
+                  placeholder="Find something to work on..."
                   autocomplete="off"
               /></label>
               <div class="filters" role="group" aria-label="Filter quests">
                 <button
-                  v-for="f in configured
+                  v-for="f in programReady
                     ? ['all', 'open', 'claimed']
                     : ['all', 'sample']"
                   :key="f"
@@ -968,9 +844,7 @@ function eventDescription(e) {
                   <h2 :id="'quest-title-' + q.id">{{ q.title }}</h2>
                   <p>
                     {{
-                      q.sample
-                        ? q.detail
-                        : "An open participation reward. Claiming is recorded on Robinhood Chain. No off-chain work is verified by this claim."
+                    q.detail || "A community participation record on Solana."
                     }}
                   </p>
                   <div v-if="!q.sample" class="quest-cap">
@@ -1000,11 +874,9 @@ function eventDescription(e) {
                 </div>
                 <div class="quest-action">
                   <div class="quest-reward">
-                    <span>Reward <small v-if="q.sample">· example</small></span
-                    ><strong
-                      >{{ units(q.reward) }}
-                      <small>{{ tokenSymbol }}</small></strong
-                    >
+                    <span>{{ q.sample ? "Reward · example" : "Reward" }}</span>
+                    <strong v-if="q.sample">{{ units(q.reward) }} <small>{{ tokenSymbol }}</small></strong>
+                    <strong v-else>No token reward</strong>
                   </div>
                   <button
                     class="outline wide"
@@ -1021,8 +893,8 @@ function eventDescription(e) {
                           : questStatus(q) !== "Open"
                             ? questStatus(q)
                             : connected
-                              ? "Claim reward"
-                              : "Connect to claim"
+                              ? "Record participation"
+                              : "Connect to record"
                     }}<Icon :size="17" /></button
                   ><button
                     v-if="isOwner && !q.sample"
@@ -1057,7 +929,7 @@ function eventDescription(e) {
             <div class="admin-intro">
               <span class="eyebrow">STEWARD TOOLS</span>
               <h2>Make room for<br />the next contribution.</h2>
-              <p>Rewards are minted when claimed, subject to the supply cap.</p>
+              <p>Quest claims create a participation record only. This program does not mint or transfer token rewards.</p>
             </div>
             <div class="admin-fields">
               <h3>Publish a quest</h3>
@@ -1065,15 +937,14 @@ function eventDescription(e) {
                 <label
                   >Quest title<input
                     v-model="adminTitle"
-                    maxlength="200"
+                    maxlength="80"
                     required
-                    placeholder="Welcome to Actobraid" /></label
-                ><label
-                  >Reward ({{ tokenSymbol }})<input
-                    v-model="adminReward"
-                    inputmode="decimal"
-                    required
-                    placeholder="10"
+                    placeholder="Welcome to Kivoraft" /></label
+                ><label>Quest details<textarea
+                    v-model="adminDetails"
+                    maxlength="240"
+                    rows="2"
+                    placeholder="What should participants review or contribute?"
                 /></label>
               </div>
               <div class="form-row">
@@ -1103,11 +974,12 @@ function eventDescription(e) {
         <section v-if="tab === 'stake'" class="page stake-page">
           <div class="page-head">
             <div>
-              <span class="eyebrow">02 / TIME WELL COMMITTED</span>
-              <h1>Put time behind it.</h1>
+              <span class="eyebrow">TOKEN DETAILS / COMING LATER</span>
+              <h1>Token features come later.</h1>
               <p>
-                Commit test tokens for a period you choose. Track your rewards
-                and withdraw your principal after the lock ends.
+                Quests and advisory governance run through the Solana program.
+                Token locking and rewards remain disabled until the mint,
+                custody model, schedule, and funding are defined.
               </p>
             </div>
             <span class="page-emblem peach"
@@ -1115,248 +987,48 @@ function eventDescription(e) {
             /></span>
           </div>
           <div class="stake-layout">
-            <form class="panel stake-card" @submit.prevent="stake">
+            <article class="panel stake-card">
               <div class="panel-heading">
                 <div>
-                  <span class="eyebrow">SET UP YOUR COMMITMENT</span>
-                  <h2>Create a position</h2>
+                  <span class="eyebrow">TOKEN STATUS</span>
+                  <h2>No token is connected</h2>
                 </div>
-                <span class="badge">{{
-                  configured ? "Testnet" : "Sample"
-                }}</span>
+                <span class="badge">Not configured</span>
               </div>
-              <ol class="flow-steps" aria-label="Staking steps">
-                <li class="current"><span>1</span>Set terms</li>
-                <li><span>2</span>Review in wallet</li>
-                <li><span>3</span>Track position</li>
-              </ol>
               <div class="stake-configuration">
-                <h3 class="form-section-heading">
-                  <span>01</span> Set your terms
-                </h3>
-                <label class="amount-label" for="stake-amount"
-                  >Amount to stake<span
-                    >Available:
-                    {{ connected && accountReady ? units(token) : "—" }}
-                    {{ tokenSymbol }}</span
-                  ></label
-                >
-                <div class="amount-field" :class="{ invalid: stakeError }">
-                  <input
-                    id="stake-amount"
-                    v-model="stakeAmount"
-                    inputmode="decimal"
-                    autocomplete="off"
-                    placeholder="0.00"
-                    required
-                    :aria-invalid="Boolean(stakeError)"
-                    aria-describedby="stake-error"
-                  /><span>{{ tokenSymbol }}</span
-                  ><button
-                    type="button"
-                    :disabled="
-                      !connected ||
-                      !accountReady ||
-                      accountReading ||
-                      token === 0n
-                    "
-                    @click="stakeAmount = exact(token)"
-                  >
-                    Max
-                  </button>
-                </div>
-                <p
-                  id="stake-error"
-                  class="field-message"
-                  :class="{ 'inline-error': stakeError }"
-                  aria-live="polite"
-                >
-                  {{
-                    stakeError ||
-                    "Your tokens move directly into the protocol. No separate approval."
-                  }}
+                <p class="form-note">
+                  <Icon name="info" :size="17" />
+                  <span>
+                    The Solana program currently records quest participation and
+                    advisory votes. It does not custody tokens, mint rewards,
+                    or track staking positions.
+                  </span>
                 </p>
-                <fieldset class="duration-field">
-                  <legend>Choose your lock duration</legend>
-                  <div class="duration-options">
-                    <label
-                      v-for="days in [7, 30, 90, 365]"
-                      :key="days"
-                      :class="{ chosen: Number(lockDays) === days }"
-                      ><input
-                        v-model="lockDays"
-                        type="radio"
-                        :value="days"
-                        name="lock-duration" /><span>{{ days }}</span
-                      ><small>days</small
-                      ><Icon
-                        v-if="Number(lockDays) === days"
-                        name="check"
-                        :size="13"
-                    /></label>
-                  </div>
-                </fieldset>
+                <h3 class="form-section-heading">
+                  <span>01</span> Details needed before token features
+                </h3>
+                <ul>
+                  <li>A verified SPL token mint and its decimals</li>
+                  <li>Custody and withdrawal rules for any lock</li>
+                  <li>A defined reward source and funding plan</li>
+                </ul>
               </div>
               <div class="stake-review">
                 <h3 class="form-section-heading">
-                  <span>02</span> Review your position
+                  <span>02</span> What unlocks this
                 </h3>
-                <div class="deposit-summary">
-                  <div>
-                    <span>{{
-                      configured ? "Protocol rate" : "Example rate"
-                    }}</span
-                    ><strong>{{
-                      configured && !ready
-                        ? "—"
-                        : (Number(apr) / 100).toFixed(2) + "% APR"
-                    }}</strong>
-                  </div>
-                  <div>
-                    <span>Estimated reward over {{ lockDays }} days</span
-                    ><strong
-                      >{{ configured && !ready ? "—" : estimate }}
-                      {{ tokenSymbol }}</strong
-                    >
-                  </div>
-                  <div>
-                    <span>Network gas</span><span>Paid in testnet ETH</span>
-                  </div>
-                </div>
-                <div class="form-note">
-                  <Icon name="info" :size="17" />
-                  <p>
-                    Adding to a position can extend its unlock date. Estimates
-                    assume an unchanged rate and available reward supply.
-                  </p>
-                </div>
-                <button
-                  class="primary wide"
-                  :disabled="
-                    actionDisabled || Boolean(stakeError) || !stakeAmount.trim()
-                  "
-                  type="submit"
-                >
-                  {{
-                    busy
-                      ? "Transaction in progress…"
-                      : !configured
-                        ? "Preview staking"
-                        : connected
-                          ? "Stake " + tokenSymbol
-                          : "Connect and stake"
-                  }}<Icon :size="18" />
+                <p class="fine-print">
+                  Once a verified mint and clear custody and funding rules are
+                  provided, token features can be designed and tested against
+                  those exact details.
+                </p>
+                <button class="primary" type="button" @click="go('learn')">
+                  Read the field guide <Icon name="external" :size="18" />
                 </button>
               </div>
-            </form>
-            <div class="position-column">
-              <article class="position-card">
-                <div class="panel-heading">
-                  <span class="eyebrow">YOUR POSITION</span
-                  ><span class="position-icon"
-                    ><Icon name="wallet" :size="21"
-                  /></span>
-                </div>
-                <strong class="position-balance"
-                  >{{ connected && accountReady ? units(position.amount) : "—"
-                  }}<small>{{ tokenSymbol }} committed</small></strong
-                >
-                <p>
-                  {{
-                    connected
-                      ? !accountReady
-                        ? accountReading
-                          ? "Reading your wallet data…"
-                          : "Wallet data needs a refresh."
-                        : position.amount > 0n
-                          ? "A small commitment to shared progress."
-                          : "Your first commitment starts here."
-                      : "Connect your wallet to see your position."
-                  }}
-                </p>
-                <div class="position-data">
-                  <div class="position-detail">
-                    <span>Claimable rewards</span
-                    ><b
-                      >{{
-                        connected && accountReady
-                          ? units(position.yield, 8)
-                          : "—"
-                      }}
-                      {{ tokenSymbol }}</b
-                    >
-                  </div>
-                  <div class="position-detail">
-                    <span>Unlock date</span
-                    ><b>{{
-                      connected && !accountReady
-                        ? "Waiting for wallet data"
-                        : connected && position.amount > 0n
-                          ? date(position.unlockAt)
-                          : "No active lock"
-                    }}</b>
-                  </div>
-                  <div v-if="connected" class="position-detail">
-                    <span>Gas balance</span
-                    ><b>{{ accountReady ? units(native, 6) : "--" }} ETH</b>
-                  </div>
-                </div>
-                <button
-                  v-if="!connected"
-                  class="outline wide"
-                  :disabled="connecting || busy || switching"
-                  @click="connect"
-                >
-                  Connect wallet <Icon name="wallet" :size="18" /></button
-                ><template v-else
-                  ><button
-                    class="outline wide"
-                    :disabled="
-                      actionDisabled || position.yield === 0n || !!accountError
-                    "
-                    @click="claimYield"
-                  >
-                    Claim rewards <Icon :size="18" /></button
-                  ><button
-                    class="text-button wide"
-                    :disabled="
-                      actionDisabled ||
-                      position.amount === 0n ||
-                      !unlocked ||
-                      !!accountError
-                    "
-                    @click="unstake"
-                  >
-                    {{
-                      position.amount > 0n && !unlocked
-                        ? "Principal is locked"
-                        : "Withdraw principal"
-                    }}
-                  </button></template
-                >
-              </article>
-              <article class="staking-note">
-                <Icon name="shield" :size="23" />
-                <div>
-                  <h3>A clear commitment.</h3>
-                  <p>
-                    Rewards are simple, without automatic compounding. Claiming
-                    rewards keeps your lock unchanged. The supply cap limits
-                    reward availability.
-                  </p>
-                  <p class="fine-print">
-                    Testnet tokens have no promised market value or financial
-                    return.
-                  </p>
-                  <button class="text-button" @click="go('learn')">
-                    Read the guide <Icon :size="16" />
-                  </button>
-                </div>
-              </article>
-            </div>
+            </article>
           </div>
-        </section>
-        <section v-if="tab === 'governance'" class="page governance-page">
+        </section><section v-if="tab === 'governance'" class="page governance-page">
           <div class="page-head">
             <div>
               <span class="eyebrow">03 / THE ASSEMBLY</span>
@@ -1426,7 +1098,7 @@ function eventDescription(e) {
                   <span>{{
                     draftSaved
                       ? "Draft saved in this tab."
-                      : "10–2,000 characters."
+                      : "10-2,000 characters."
                   }}</span
                   ><span>{{ proposalText.length }} / 2,000</span>
                 </div>
@@ -1445,7 +1117,7 @@ function eventDescription(e) {
                   :disabled="actionDisabled || proposalText.trim().length < 10"
                   type="submit"
                 >
-                  {{ !configured ? "Preview proposal" : "Publish proposal"
+                  {{ !programReady ? "Preview proposal" : "Publish proposal"
                   }}<Icon :size="18" />
                 </button>
                 <div class="editor-actions">
@@ -1489,7 +1161,7 @@ function eventDescription(e) {
                     <span>03</span>
                     <div>
                       <strong>Leave room to consider</strong>
-                      <p>Choose a voting window of 1–30 days.</p>
+                      <p>Choose a voting window of 1-30 days.</p>
                     </div>
                   </li>
                 </ol>
@@ -1501,14 +1173,14 @@ function eventDescription(e) {
                 <span class="count-badge">{{ visibleProposals.length }}</span>
               </div>
               <div
-                v-if="configured && reading && !visibleProposals.length"
+                v-if="programReady && reading && !visibleProposals.length"
                 class="skeleton"
                 role="status"
               >
                 <span class="sr-only">Loading proposals</span>
               </div>
               <div
-                v-if="configured && !reading && !visibleProposals.length"
+                v-if="programReady && !reading && !visibleProposals.length"
                 class="empty"
               >
                 <Icon name="governance" :size="32" />
@@ -1523,7 +1195,7 @@ function eventDescription(e) {
                   {{
                     readError
                       ? "Use Try again above to reconnect."
-                      : "Start the first Actobraid discussion with a clear idea and a voting period."
+                      : "Start the first Kivoraft discussion with a clear idea and a voting period."
                   }}
                 </p>
                 <button
@@ -1619,7 +1291,7 @@ function eventDescription(e) {
                 <Icon name="info" />
                 <p>
                   One vote per wallet per proposal. Voting weight follows the
-                  connected contract’s rules. Your current balance may differ
+                  connected program's rules. Your current balance may differ
                   from eligible voting weight.
                 </p>
               </div>
@@ -1633,8 +1305,8 @@ function eventDescription(e) {
               <span class="eyebrow">04 / THE OPEN LEDGER</span>
               <h1>Every part accounted for.</h1>
               <p>
-                See the community’s resources and the activity behind them, read
-                directly from Robinhood Chain.
+                See the community's resources and the activity behind them, read
+                directly from Solana.
               </p>
             </div>
             <span class="page-emblem"><Icon name="treasury" :size="32" /></span>
@@ -1647,26 +1319,26 @@ function eventDescription(e) {
                   ><Icon name="treasury" :size="24" />
                 </div>
                 <strong
-                  >{{ ready && treasuryKnown ? units(treasuryBalance) : "—"
+                >{{ ready && treasuryTokenKnown ? units(treasuryBalance) : "—"
                   }}<small>{{ tokenSymbol }}</small></strong
                 ><span>{{ tokenIdentity }}</span>
                 <div class="treasury-gas">
                   <Icon name="wallet" :size="19" /><span
                     >Treasury gas balance</span
                   ><strong
-                    >{{ ready && treasuryKnown ? units(treasuryNative, 6) : "—"
-                    }}<small>Testnet ETH</small></strong
+                    >{{ ready && treasuryNativeKnown ? solUnits(treasuryNative, 6) : "—"
+                    }}<small>{{ SOLANA_CLUSTER === "devnet" ? "Devnet SOL" : SOLANA_CLUSTER === "testnet" ? "Testnet SOL" : "SOL" }}</small></strong
                   >
                 </div>
               </article>
               <p
-                v-if="treasuryError || (configured && ready && !treasuryKnown)"
+                v-if="treasuryError || (mintConfigured && ready && (!treasuryKnown || !treasuryTokenKnown))"
                 class="treasury-notice"
                 role="status"
               >
                 <Icon name="info" :size="17" />{{
                   treasuryError ||
-                  "A verified treasury address is not available for this contract. Treasury balances remain unknown."
+                  "Treasury token or SOL balances are not fully available yet."
                 }}
               </p>
               <article class="panel ledger">
@@ -1681,11 +1353,11 @@ function eventDescription(e) {
                   </div>
                   <div>
                     <dt>Total issued {{ tokenSymbol }}</dt>
-                    <dd>{{ ready ? units(totalSupply) : "—" }}</dd>
+                    <dd>{{ mintConfigured && ready ? units(totalSupply) : "—" }}</dd>
                   </div>
                   <div>
-                    <dt>{{ tokenSymbol }} held by protocol</dt>
-                    <dd>{{ ready ? units(totalStaked) : "—" }}</dd>
+                    <dt>Token staking</dt>
+                    <dd>Not implemented</dd>
                   </div>
                   <div>
                     <dt>Your {{ tokenSymbol }} balance</dt>
@@ -1718,34 +1390,30 @@ function eventDescription(e) {
                     </dd>
                   </div>
                   <div>
-                    <dt>Token contract</dt>
+                    <dt>Token mint</dt>
                     <dd>
                       <a
-                        v-if="configured"
-                        :href="explorer('address', CONTRACT_ADDRESS)"
+                v-if="mintConfigured"
+                        :href="explorer('address', TOKEN_MINT_ADDRESS)"
                         target="_blank"
                         rel="noopener noreferrer"
-                        >{{ short(CONTRACT_ADDRESS)
+                        >{{ short(TOKEN_MINT_ADDRESS)
                         }}<Icon name="external" :size="15" /></a
                       ><span v-else>Not configured</span>
                     </dd>
                   </div>
                   <div>
                     <dt>Network</dt>
-                    <dd>Robinhood Chain Testnet</dd>
+                    <dd>{{ SOLANA_NETWORK_NAME }}</dd>
                   </div>
                   <div>
-                    <dt>Chain ID</dt>
-                    <dd>{{ CHAIN_ID }}</dd>
+                    <dt>Cluster</dt>
+                    <dd>{{ SOLANA_CLUSTER }}</dd>
                   </div>
                 </dl>
                 <p class="fine-print">
-                  Actobraid is the app brand.
-                  {{
-                    configured
-                      ? "The connected contract defines the on-chain token name and symbol."
-                      : "Token details are examples until a deployed contract is configured."
-                  }}
+                  Kivoraft is the app brand.
+                  {{ mintConfigured ? `Decimals are read from the mint (${tokenDecimals}); display name and ticker metadata are pending.` : "No token mint is deployed or configured. KVRF is only a preview label." }}
                 </p>
               </article>
             </div>
@@ -1760,49 +1428,27 @@ function eventDescription(e) {
                 >
               </div>
               <p class="fine-print">
-                Latest 2,000 blocks. The explorer holds the full history.
+                Solana program indexing is not connected yet. No on-chain program activity is available.
               </p>
-              <p v-if="eventsError" class="inline-error" role="alert">
-                {{ eventsError }}
-              </p>
-              <div v-if="!activity.length" class="empty compact">
+              <div class="empty compact">
                 <span class="empty-orbit"
                   ><Icon name="clock" :size="30"
                 /></span>
                 <h3>
                   {{
                     reading
-                      ? "Reading the ledger…"
-                      : readError || eventsError
+                      ? "Reading the Solana ledger..."
+                      : readError
                         ? "Activity could not load."
                         : "A quiet moment on-chain."
                   }}
                 </h3>
                 <p>
                   {{
-                    configured
-                      ? "Recent contract events will appear here after a successful sync."
-                      : "Activity appears when a contract is configured."
+                    "A Solana activity indexer will be connected after program deployment."
                   }}
                 </p>
               </div>
-              <ol v-else class="activity-list">
-                <li v-for="e in activity" :key="e.hash + e.index">
-                  <span class="event-icon"
-                    ><Icon name="arrow" :size="16"
-                  /></span>
-                  <div>
-                    <p>{{ eventDescription(e) }}</p>
-                    <span>Block {{ e.block.toLocaleString() }}</span
-                    ><a
-                      :href="explorer('tx', e.hash)"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      >View transaction <Icon name="external" :size="14"
-                    /></a>
-                  </div>
-                </li>
-              </ol>
               <div class="activity-note">
                 <Icon name="shield" :size="19" />
                 <p>
@@ -1815,7 +1461,7 @@ function eventDescription(e) {
         <section v-if="tab === 'learn'" class="page learn">
           <div class="page-head">
             <div>
-              <span class="eyebrow">THE ACTOBRAID FIELD GUIDE</span>
+              <span class="eyebrow">THE KIVORAFT FIELD GUIDE</span>
               <h1>A way in.<br /><em>A way forward.</em></h1>
               <p>
                 A few things to know before your first contribution. Follow the
@@ -1831,12 +1477,12 @@ function eventDescription(e) {
               <span class="round-icon"><Icon name="spark" :size="27" /></span
               ><span class="eyebrow">YOUR FIRST FIVE MINUTES</span>
               <h2>Three things.<br />Then you're ready.</h2>
-              <p>Get ready to participate on Robinhood Chain Testnet.</p>
+              <p>Get ready to participate on {{ SOLANA_NETWORK_NAME }}.</p>
               <ol class="setup-list">
                 <li>
                   <span>1</span>
                   <div>
-                    <strong>Bring an EVM wallet</strong>
+                    <strong>Bring a Solana wallet</strong>
                     <p>Connect to see your balances.</p>
                   </div>
                   <Icon v-if="connected" name="check" :size="18" />
@@ -1844,11 +1490,11 @@ function eventDescription(e) {
                 <li>
                   <span>2</span>
                   <div>
-                    <strong>Choose the testnet</strong>
-                    <p>Switch to Robinhood Chain.</p>
+                    <strong>Choose the cluster</strong>
+                    <p>Choose {{ SOLANA_NETWORK_NAME }} in your wallet.</p>
                   </div>
                   <Icon
-                    v-if="connected && !wrongChain"
+                    v-if="connected"
                     name="check"
                     :size="18"
                   />
@@ -1857,22 +1503,23 @@ function eventDescription(e) {
                   <span>3</span>
                   <div>
                     <strong>Add a little gas</strong>
-                    <p>Testnet ETH covers transactions.</p>
+                    <p>SOL on {{ SOLANA_CLUSTER }} covers transaction fees.</p>
                   </div>
                 </li>
               </ol>
               <a
                 class="primary wide"
-                href="https://faucet.testnet.chain.robinhood.com"
+                href="https://faucet.solana.com/"
                 target="_blank"
                 rel="noopener noreferrer"
-                >Get testnet ETH <Icon name="external" :size="18" /></a
+                v-if="SOLANA_CLUSTER === 'devnet'"
+                >Get Devnet SOL <Icon name="external" :size="18" /></a
               ><button
                 class="text-button wide"
-                :disabled="connecting || busy || switching"
-                @click="connect"
+                :disabled="connecting || busy"
+                @click="connected ? disconnectWallet() : connect()"
               >
-                {{ connected ? "Wallet connected" : "Connect your wallet"
+                {{ connected ? "Disconnect wallet" : "Connect your wallet"
                 }}<Icon name="wallet" :size="16" />
               </button>
             </aside>
@@ -1887,9 +1534,9 @@ function eventDescription(e) {
                   <span class="tiny-label">START WITH SOMETHING USEFUL</span>
                   <h2>Make a contribution</h2>
                   <p>
-                    Quests publish their reward, expiry, and claim cap. Each
-                    wallet can claim once. Open claims do not verify off-chain
-                    work or prove a unique identity.
+                    Quests publish an expiry and claim cap. Each wallet can
+                    record participation once. Records do not verify off-chain
+                    work or prove a unique identity, and they pay no token.
                   </p>
                   <button class="text-button" @click="go('quests')">
                     Explore quests <Icon :size="17" />
@@ -1898,17 +1545,17 @@ function eventDescription(e) {
                 <Icon name="quests" :size="27" />
               </article>
               <article>
-                <span class="guide-number">02</span>
+                  <span class="guide-number">02</span>
                 <div class="learn-copy">
-                  <span class="tiny-label">PUT TIME BEHIND IT</span>
-                  <h2>Make a commitment</h2>
+                  <span class="tiny-label">TOKEN FEATURES COME LATER</span>
+                  <h2>Wait for token details</h2>
                   <p>
-                    Lock {{ tokenSymbol }} for 7, 30, 90, or 365 days, without a
-                    separate approval. Rewards are simple and do not compound.
-                    Withdraw principal after the lock ends.
+                    Token locking and rewards need a verified mint, defined
+                    custody rules, and a funded reward source. None are enabled
+                    by the current community program.
                   </p>
                   <button class="text-button" @click="go('stake')">
-                    Explore staking <Icon :size="17" />
+                    See token status <Icon :size="17" />
                   </button>
                 </div>
                 <Icon name="stake" :size="27" />
@@ -1919,7 +1566,7 @@ function eventDescription(e) {
                   <span class="tiny-label">GIVE THE NEXT IDEA A VOICE</span>
                   <h2>Choose a direction</h2>
                   <p>
-                    Create a proposal with a 1–30 day voting period, or vote on
+                    Create a proposal with a 1-30 day voting period, or vote on
                     an open idea. One vote per wallet. Results are advisory;
                     treasury actions remain with the steward.
                   </p>
@@ -1936,54 +1583,51 @@ function eventDescription(e) {
               <span class="eyebrow">A FEW USEFUL ANSWERS</span>
               <h2>Good to know.</h2>
               <p>
-                Know what you’re signing.<br />Know what stays in your control.
+                Know what you're signing.<br />Know what stays in your control.
               </p>
             </div>
             <div class="guide-details">
               <details open>
                 <summary>What does a wallet confirmation do?</summary>
                 <p>
-                  A claim, deposit, withdrawal, proposal, or vote is an on-chain
-                  transaction. Check the network and details in your wallet.
-                  Rejecting a request submits nothing. Once submitted, Actobraid
-                  shows a transaction link and its confirmation status.
+                  Quest participation, proposal creation, and voting use
+                  Solana transactions when the program is deployed and
+                  initialized. The wallet shows each instruction before signing.
                 </p>
               </details>
               <details>
                 <summary>Who controls the protocol?</summary>
                 <p>
-                  The contract owner publishes and pauses quests, can pause
-                  protocol actions, and controls treasury minting within the
-                  supply cap. Stewardship powers are visible on-chain.
-                  Governance votes do not automatically execute spending.
+                  The program authority can publish quests and pause community
+                  actions. Governance votes are advisory and do not execute
+                  treasury spending.
                 </p>
               </details>
               <details>
                 <summary>
-                  Why is the token name different from Actobraid?
+                  Why is the token name different from Kivoraft?
                 </summary>
                 <p>
-                  Actobraid is the application brand. Token names and symbols
-                  come from the connected contract: {{ tokenIdentity }}. A
-                  visual rebrand does not change an existing token, address,
-                  balance, or signing domain.
+                  The future mint will define the token name, symbol and decimals.
+                  Kivoraft is the application brand, while KVRF is only a preview
+                  label today. Current token details: {{ tokenIdentity }}.
                 </p>
               </details>
               <details>
-                <summary>Do testnet tokens have financial value?</summary>
+                <summary>Is a Kivoraft token deployed?</summary>
                 <p>
-                  No market value or financial return is promised. This is an
-                  experimental testnet application. Reward estimates depend on
-                  the contract’s rate and remaining supply, and should not be
-                  treated as an investment return.
+                  No Kivoraft token mint is configured. KVRF is a preview label
+                  only; the community program does not create or distribute a
+                  token. A mint's name, symbol, decimals, and address will be
+                  shown after they are provided and verified.
                 </p>
               </details>
               <details>
-                <summary>Is Actobraid an official Robinhood product?</summary>
+                <summary>Is Kivoraft an official Solana product?</summary>
                 <p>
-                  No. Actobraid is an independent community project built on
-                  Robinhood Chain Testnet. It is not affiliated with or endorsed
-                  by Robinhood Markets.
+                  No. Kivoraft is an independent community project currently
+                  configured for {{ SOLANA_NETWORK_NAME }}. It is not affiliated
+                  with the Solana Foundation.
                 </p>
               </details>
               <details>
@@ -1991,9 +1635,9 @@ function eventDescription(e) {
                   Why am I seeing a preview or a connection error?
                 </summary>
                 <p>
-                  A preview means no contract is configured; sample content
-                  cannot submit transactions. A connection error means the
-                  configured contract could not be read. Use Refresh to retry.
+                  A preview means sample content is shown and no transaction is
+                  submitted. A connection error means the configured Solana data
+                  could not be read. Use Refresh to retry.
                   Never share a seed phrase or private key to resolve a
                   connection issue.
                 </p>
@@ -2004,11 +1648,11 @@ function eventDescription(e) {
       </main>
       <footer>
         <span
-          >© 2026 Actobraid <span class="footer-separator">·</span> Good work.
+          >© 2026 Kivoraft <span class="footer-separator">·</span> Build together.
           Shared momentum.</span
         ><span
           >Independent community project
-          <span class="footer-dot"></span> Robinhood Chain Testnet</span
+          <span class="footer-dot"></span> {{ SOLANA_NETWORK_NAME }}</span
         >
       </footer>
     </div>
@@ -2049,4 +1693,29 @@ function eventDescription(e) {
       </button>
     </aside>
   </div>
+  <div v-if="walletPickerOpen" class="wallet-picker-backdrop" @click.self="closeWalletPicker">
+    <section class="wallet-picker" role="dialog" aria-modal="true" aria-labelledby="wallet-picker-title">
+      <button class="wallet-picker-close icon-button" aria-label="Close wallet picker" @click="closeWalletPicker">
+        <Icon name="close" :size="17" />
+      </button>
+      <span class="eyebrow">SOLANA WALLET STANDARD</span>
+      <h2 id="wallet-picker-title">Choose a wallet</h2>
+      <p>Connect a wallet that supports {{ SOLANA_NETWORK_NAME }}.</p>
+      <div class="wallet-picker-list">
+        <button v-for="candidate in walletOptions" :key="candidate.name" class="wallet-picker-option" @click="chooseWallet(candidate)">
+          <img v-if="candidate.icon" :src="candidate.icon" :alt="candidate.name + ' icon'" />
+          <span>{{ candidate.name }}</span>
+          <Icon name="arrow" :size="17" />
+        </button>
+      </div>
+      <button class="text-button wide" @click="closeWalletPicker">Cancel</button>
+    </section>
+  </div>
 </template>
+
+
+
+
+
+
+

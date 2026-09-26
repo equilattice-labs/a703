@@ -1,268 +1,338 @@
-import { readFileSync } from 'node:fs'
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { ref, computed } from 'vue'
-import { Contract as EthersContract, parseUnits, formatUnits, isAddress, ZeroAddress } from 'ethers'
+import { spawnSync } from 'node:child_process'
+import { web3 } from '@coral-xyz/anchor'
+import {
+  claimPda,
+  communityPda,
+  createProgramClient,
+  questPda,
+} from '../src/kivoraft-program.js'
+import { supportsSolanaCluster } from '../src/wallet-networks.js'
 
-// Exercise the actual composable and ethers Contract runner without a wallet,
-// live RPC, .env files, or transactions. Only providers and lifecycle are mocked.
-const source = readFileSync(new URL('../src/useActobraid.js', import.meta.url), 'utf8')
-  .replace(/^\uFEFF/, '')
-  .replace(/^import .*\r?\n/gm, '')
-  .replace('export function useActobraid()', 'function useActobraid()')
-const A = '0x1111111111111111111111111111111111111111'
-const B = '0x2222222222222222222222222222222222222222'
-const CONTRACT = '0x3333333333333333333333333333333333333333'
-const TREASURY = '0x4444444444444444444444444444444444444444'
-const CHAIN = 46630
+const moduleUrl = new URL('../src/useKivoraft.js', import.meta.url)
+const solanaConfigUrl = new URL('../src/solana.js', import.meta.url)
 
-function deferred() {
-  let resolve
-  const promise = new Promise(done => { resolve = done })
-  return { promise, resolve }
-}
-async function until(predicate) {
-  for (let i = 0; i < 120 && !predicate(); i++) await Promise.resolve()
-  assert.ok(predicate(), 'Expected asynchronous state was not reached')
-}
-function setup(treasury = '') {
-  const state = {
-    rpcChain: CHAIN, walletChain: CHAIN, accounts: [A], rejectWalletRead: false,
-    sendCount: 0, switchCount: 0, nameCount: 0, treasuryCalls: [],
-    waitGate: null, signerHook: null, accountGate: null, refreshGate: null,
-  }
-  const listeners = {}
-  let mounted
-  const rpc = {
-    async send(method) {
-      assert.equal(method, 'eth_chainId')
-      if (state.refreshGate) await state.refreshGate.promise
-      return `0x${state.rpcChain.toString(16)}`
-    },
-    getCode: async () => '0x1234', getBlockNumber: async () => 2000,
-    getLogs: async () => [], getBalance: async address => address === TREASURY ? 12n : 8n,
-    destroy() {},
-  }
-  const readContract = {
-    interface: { hasFunction: () => false },
-    name: async () => { state.nameCount++; return 'Deedluma' },
-    symbol: async () => 'DLU', nextQuestId: async () => 1n, nextProposalId: async () => 1n,
-    owner: async () => A, totalSupply: async () => 1000n, APR_BPS: async () => 800n,
-    paused: async () => false,
-    async balanceOf(address) {
-      if (address === TREASURY) { state.treasuryCalls.push(address); return 77n }
-      if (address === CONTRACT) return 22n
-      if (state.rejectWalletRead) throw new Error('wallet RPC failure')
-      if (state.accountGate) await state.accountGate.promise
-      return address === B ? 202n : 101n
-    },
-    positions: async () => ({ amount: 20n, unlockAt: 1n }), pendingYield: async () => 1n,
-    quests: async () => ({ title: 'Quest', reward: 1n, expiresAt: 9999999999n, maxClaims: 10n, claims: 0n, active: true }),
-    proposals: async () => ({ description: 'Proposal', forVotes: 0n, againstVotes: 0n, endsAt: 9999999999n, executed: false }),
-    hasClaimedQuest: async (_, address) => address === A,
-    hasVoted: async (_, address) => address === A,
-  }
-  const ethereum = {
-    on: (event, handler) => { listeners[event] = handler }, removeListener() {},
-    async request({ method }) {
-      if (method === 'eth_accounts' || method === 'eth_requestAccounts') return state.accounts
-      if (method === 'eth_chainId') return `0x${state.walletChain.toString(16)}`
-      if (method === 'wallet_switchEthereumChain') { state.switchCount++; state.walletChain = CHAIN; return null }
-      throw new Error(`Unexpected wallet method: ${method}`)
-    },
-  }
-  const window = { ethereum }
-  function Contract(address, abi, runner) {
-    assert.equal(address, CONTRACT)
-    if (runner === rpc) return readContract
-    return {
-      async submit() {
-        const contract = new EthersContract(CONTRACT, ['function stake(uint256 amount,uint256 lockDuration)'], runner)
-        const transaction = await contract.stake(1n, 604800)
-        return {
-          hash: transaction.hash,
-          async wait() {
-            if (state.waitGate) await state.waitGate.promise
-            return { status: 1, hash: transaction.hash }
-          },
-        }
-      },
-    }
-  }
-  function BrowserProvider(provider, network) {
-    assert.equal(provider, ethereum)
-    assert.equal(network, CHAIN)
-    return {
-      destroy() {},
-      async getSigner(address) {
-        if (state.signerHook) await state.signerHook()
-        return {
-          getAddress: async () => address,
-          async sendTransaction(transaction) {
-            state.sendCount++; state.lastTransaction = transaction
-            return { hash: '0xabc' }
-          },
-        }
-      },
-    }
-  }
-  const dependencies = {
-    ref, computed, onMounted: handler => { mounted = handler }, onUnmounted() {},
-    BrowserProvider, Contract, JsonRpcProvider: function () { return rpc },
-    parseUnits, formatUnits, isAddress, ZeroAddress, ABI: [], CONTRACT_ADDRESS: CONTRACT,
-    TREASURY_ADDRESS: treasury, NETWORK: { chainId: `0x${CHAIN.toString(16)}` },
-    CHAIN_ID: CHAIN, RPC_URL: 'mock', EXPLORER_URL: 'https://example.invalid', DEPLOYMENT_BLOCK: 0,
-    window, setInterval: () => 0, clearInterval() {},
-  }
-  const app = new Function(...Object.keys(dependencies), `${source}\nreturn useActobraid();`)(...Object.values(dependencies))
-  return { app, state, listeners, mount: () => mounted(), window }
-}
-
-test('verifies actual RPC chain and clears previously successful data on failure', async () => {
-  const { app, state, mount } = setup()
-  await mount()
-  assert.equal(app.accountReady.value, true)
-  assert.equal(app.treasuryKnown.value, false)
-  assert.equal(app.treasury.value, '')
-  const previousCalls = state.nameCount
-  state.rpcChain = 1
-  assert.equal(await app.refresh(), false)
-  assert.equal(state.nameCount, previousCalls)
-  assert.equal(app.ready.value, false)
-  assert.equal(app.accountReady.value, false)
-  assert.deepEqual(app.quests.value, [])
-  assert.equal(app.totalSupply.value, 0n)
+test('discovers and validates Wallet Standard accounts on MetaMask Solana CAIP networks', () => {
+  const metamaskTestnet = 'solana:4uhcVJyU9pJkvQyS88uRDiswHXSCkY3z'
+  const metamaskDevnet = 'solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1'
+  assert.equal(supportsSolanaCluster([metamaskTestnet], 'testnet'), true)
+  assert.equal(supportsSolanaCluster(['solana:testnet'], 'testnet'), true)
+  assert.equal(supportsSolanaCluster([metamaskDevnet], 'testnet'), false)
+  assert.equal(supportsSolanaCluster([metamaskDevnet], 'devnet'), true)
+  assert.equal(supportsSolanaCluster([], 'testnet'), false)
+  assert.equal(supportsSolanaCluster(['solana:localnet'], 'custom'), true)
 })
 
-test('reads only an explicitly configured treasury instead of inferring the owner', async () => {
-  const { app, state, mount } = setup(TREASURY)
-  await mount()
-  assert.equal(app.treasuryKnown.value, true)
-  assert.equal(app.treasury.value, TREASURY)
-  assert.equal(app.treasuryBalance.value, 77n)
-  assert.deepEqual(state.treasuryCalls, [TREASURY])
+test('builds quest instructions from the shipped Anchor IDL and PDA seeds', async () => {
+  const programId = 'D7nYqa5Y1a2MQqDQb1NpU5kVS7TxDrj92mbCY9UitHq6'
+  const claimant = web3.Keypair.generate().publicKey
+  const questId = 42n
+  const program = createProgramClient(programId, 'http://127.0.0.1:8899')
+  const instruction = await program.methods.claimQuest().accounts({
+    config: communityPda(programId),
+    quest: questPda(programId, questId),
+    claimant,
+    receipt: claimPda(programId, questId, claimant),
+    systemProgram: web3.SystemProgram.programId,
+  }).instruction()
+
+  assert.equal(program.programId.toBase58(), programId)
+  assert.equal(instruction.programId.toBase58(), programId)
+  assert.deepEqual(instruction.keys.map(({ pubkey }) => pubkey.toBase58()), [
+    communityPda(programId).toBase58(),
+    questPda(programId, questId).toBase58(),
+    claimant.toBase58(),
+    claimPda(programId, questId, claimant).toBase58(),
+    web3.SystemProgram.programId.toBase58(),
+  ])
 })
 
-test('invalid treasury remains unknown without disabling independent contract reads', async () => {
-  const { app, mount } = setup('invalid')
-  await mount()
-  assert.equal(app.ready.value, true)
-  assert.equal(app.treasuryKnown.value, false)
-  assert.match(app.treasuryError.value, /invalid/)
-})
-
-test('failed account hydration blocks sending and marks old account data unavailable', async () => {
-  const { app, state, mount } = setup()
-  await mount()
-  state.rejectWalletRead = true
-  assert.equal(await app.transact('Test', contract => contract.submit()), false)
-  assert.equal(state.sendCount, 0)
-  assert.equal(app.accountReady.value, false)
-  assert.match(app.accountError.value, /wallet RPC failure/)
-})
-
-test('a delayed previous account read cannot overwrite the newly selected wallet', async () => {
-  const { app, state, mount, listeners } = setup()
-  await mount()
-  const gate = deferred()
-  state.accountGate = gate
-  const oldRead = app.connect()
-  await until(() => app.accountReading.value)
-  assert.equal(app.accountReady.value, false)
-  state.accounts = [B]; state.accountGate = null
-  await listeners.accountsChanged([B])
-  gate.resolve(); await oldRead
-  assert.equal(app.wallet.value, B)
-  assert.equal(app.token.value, 202n)
-  assert.equal(app.accountReady.value, true)
-  assert.equal(app.quests.value[0].claimed, false)
-})
-
-for (const change of ['account', 'network']) {
-  test(`blocks ${change} changes while acquiring the signer`, async () => {
-    const { app, state, mount } = setup()
-    await mount()
-    state.signerHook = () => { if (change === 'account') state.accounts = [B]; else state.walletChain = 1 }
-    assert.equal(await app.transact('Test', contract => contract.submit()), false)
-    assert.equal(state.sendCount, 0)
+test('defaults to the deployed Testnet program and never reuses it on mainnet', () => {
+  const defaultNetwork = runScenario(`
+    globalThis.window = {}
+    const config = await import(${JSON.stringify(solanaConfigUrl.href)})
+    const { useKivoraft } = await import(${JSON.stringify(moduleUrl.href)})
+    const app = useKivoraft()
+    console.log(JSON.stringify({
+      cluster: config.SOLANA_CLUSTER,
+      rpc: config.SOLANA_RPC_URL,
+      programId: config.PROGRAM_ID,
+      explorer: app.explorer('address', 'SomePublicKey'),
+    }))
+  `)
+  assert.deepEqual(defaultNetwork, {
+    cluster: 'testnet',
+    rpc: 'https://api.testnet.solana.com',
+    programId: 'D7nYqa5Y1a2MQqDQb1NpU5kVS7TxDrj92mbCY9UitHq6',
+    explorer: 'https://explorer.solana.com/address/SomePublicKey?cluster=testnet',
   })
+
+  const mainnet = runScenario(`
+    const config = await import(${JSON.stringify(solanaConfigUrl.href)})
+    console.log(JSON.stringify({ cluster: config.SOLANA_CLUSTER, programId: config.PROGRAM_ID }))
+  `, {
+    VITE_SOLANA_CLUSTER: 'mainnet-beta',
+    VITE_SOLANA_PROGRAM_ID: 'D7nYqa5Y1a2MQqDQb1NpU5kVS7TxDrj92mbCY9UitHq6',
+  })
+  assert.deepEqual(mainnet, { cluster: 'mainnet-beta', programId: '' })
+})
+
+function runScenario(source, config = {}) {
+  const script = `
+    globalThis.__KIVORAFT_ENV__ = ${JSON.stringify(config)}
+    globalThis.__rpcCalls = []
+    globalThis.__rpcImpl = async (method) => {
+      if (method === 'getVersion') return { result: { solanaCore: '1.18.0' } }
+      if (method === 'getTokenSupply') return { result: { value: { amount: '1000000000', decimals: 9 } } }
+      if (method === 'getBalance') return { result: { value: 0 } }
+      if (method === 'getTokenAccountsByOwner') return { result: { value: [] } }
+      return { result: {} }
+    }
+    globalThis.fetch = async (_url, options) => {
+      const request = JSON.parse(options.body)
+      __rpcCalls.push(request)
+      const response = await __rpcImpl(request.method, request.params)
+      if (response?.httpStatus) return { ok: false, status: response.httpStatus, json: async () => ({}) }
+      return { ok: true, json: async () => response }
+    }
+    ${source}
+  `
+  const result = spawnSync(process.execPath, ['--input-type=module', '-e', script], {
+    encoding: 'utf8',
+    env: process.env
+  })
+  assert.equal(result.status, 0, result.stderr)
+  return JSON.parse(result.stdout.trim().split('\n').at(-1))
 }
 
-test('rechecks the network at the actual ethers send boundary', async () => {
-  const { app, state, mount } = setup()
-  await mount()
-  assert.equal(await app.transact('Boundary', contract => { state.walletChain = 1; return contract.submit() }), false)
-  assert.equal(state.sendCount, 0)
+test('keeps a mint-less app in sample preview mode and never enables writes', () => {
+  const result = runScenario(`
+    globalThis.window = {}
+    const { useKivoraft } = await import(${JSON.stringify(moduleUrl.href)})
+    const app = useKivoraft()
+    console.log(JSON.stringify({ configured: app.configured, programReady: app.programReady.value, canWrite: app.canWrite.value, symbol: app.tokenSymbol.value, decimals: app.tokenDecimals.value }))
+  `)
+  assert.deepEqual(result, { configured: true, programReady: false, canWrite: false, symbol: 'KVRF', decimals: 9 })
 })
 
-test('pending transactions block connection/network prompts and send an explicit chain ID', async () => {
-  const { app, state, mount } = setup()
-  await mount()
-  const gate = deferred()
-  state.waitGate = gate
-  const transaction = app.transact('Success', contract => contract.submit())
-  await until(() => app.txState.value.stage === 'pending')
-  assert.equal(await app.switchNetwork(), false)
-  assert.equal(await app.connect(), false)
-  assert.equal(state.switchCount, 0)
-  gate.resolve()
-  assert.equal(await transaction, true)
-  assert.equal(state.lastTransaction.chainId, CHAIN)
-  assert.equal(app.txState.value.stage, 'success')
-  assert.equal(app.txState.value.hash, '0xabc')
+test('reads native SOL without requiring a deployed token mint', () => {
+  const result = runScenario(`
+    globalThis.window = {}
+    globalThis.__rpcImpl = async method => {
+      if (method === 'getVersion') return { result: { solanaCore: '1.18.0' } }
+      if (method === 'getBalance') return { result: { value: '1250000000' } }
+      return { result: {} }
+    }
+    const { useKivoraft } = await import(${JSON.stringify(moduleUrl.href)})
+    const app = useKivoraft()
+    app.wallet.value = 'Wallet111111111111111111111111111111111111'
+    const refreshed = await app.refresh()
+    console.log(JSON.stringify({
+      refreshed,
+      ready: app.ready.value,
+      mintConfigured: app.mintConfigured,
+      accountReady: app.accountReady.value,
+      sol: app.solUnits(app.native.value),
+      supplyCalls: __rpcCalls.filter(call => call.method === 'getTokenSupply').length,
+      canWrite: app.canWrite.value,
+    }))
+  `)
+  assert.deepEqual(result, {
+    refreshed: true,
+    ready: true,
+    mintConfigured: false,
+    accountReady: true,
+    sol: '1.25',
+    supplyCalls: 0,
+    canWrite: false,
+  })
 })
 
-test('missing wallets produce an actionable error and release the busy state', async () => {
-  const { app, mount, window } = setup()
-  await mount()
-  app.wallet.value = ''; window.ethereum = undefined
-  assert.equal(await app.transact('No wallet', contract => contract.submit()), false)
-  assert.match(app.txState.value.message, /Install MetaMask/)
-  assert.equal(app.busy.value, false)
+test('reads mint decimals and treasury SPL balances; displays wallet and treasury SOL at 9 decimals', () => {
+  const result = runScenario(`
+    globalThis.window = {}
+    globalThis.__rpcImpl = async (method, params) => {
+      if (method === 'getVersion') return { result: { solanaCore: '1.18.0' } }
+      if (method === 'getTokenSupply') return { result: { value: { amount: '1000000000', decimals: 6 } } }
+      if (method === 'getBalance') return { result: { value: params[0] === 'Wallet111111111111111111111111111111111111' ? '2500000000' : '5000000000' } }
+      if (method === 'getTokenAccountsByOwner') {
+        const amount = params[0] === 'Wallet111111111111111111111111111111111111' ? '1234500' : '7000000'
+        return { result: { value: [{ account: { data: { parsed: { info: { tokenAmount: { amount, decimals: 6 } } } } } }] } }
+      }
+      return { result: {} }
+    }
+    const { useKivoraft } = await import(${JSON.stringify(moduleUrl.href)})
+    const app = useKivoraft()
+    app.wallet.value = 'Wallet111111111111111111111111111111111111'
+    await app.refresh()
+    console.log(JSON.stringify({
+      configured: app.configured,
+      programReady: app.programReady.value,
+      canWrite: app.canWrite.value,
+      ready: app.ready.value,
+      decimals: app.tokenDecimals.value,
+      totalSupply: app.units(app.totalSupply.value),
+      walletToken: app.units(app.token.value),
+      walletSol: app.solUnits(app.native.value),
+      treasuryToken: app.units(app.treasuryBalance.value),
+      treasurySol: app.solUnits(app.treasuryNative.value),
+      treasuryKnown: app.treasuryKnown.value,
+      parsedAmount: String(app.parseAmount('1.2')),
+      writeResult: await app.transact('test'),
+      sendCalls: __rpcCalls.filter(call => call.method === 'sendTransaction').length
+    }))
+  `, {
+    VITE_SOLANA_TOKEN_MINT: 'Mint111111111111111111111111111111111111111',
+    VITE_SOLANA_PROGRAM_ID: 'Program1111111111111111111111111111111111111',
+    VITE_TREASURY_ADDRESS: 'Treasury111111111111111111111111111111111111'
+  })
+  assert.deepEqual(result, {
+    configured: true,
+    programReady: false,
+    canWrite: false,
+    ready: true,
+    decimals: 6,
+    totalSupply: '1,000',
+    walletToken: '1.2345',
+    walletSol: '2.5',
+    treasuryToken: '7',
+    treasurySol: '5',
+    treasuryKnown: true,
+    parsedAmount: '1200000',
+    writeResult: false,
+    sendCalls: 0
+  })
 })
 
-test('background refresh retains successful balances and readiness while blocking writes', async () => {
-  const { app, state, mount } = setup(TREASURY)
-  await mount()
-  const rpcGate = deferred(), accountGate = deferred()
-  state.refreshGate = rpcGate; state.accountGate = accountGate
-  const refresh = app.refresh()
-  assert.equal(app.reading.value, true)
-  assert.equal(app.ready.value, true)
-  assert.equal(app.accountReady.value, true)
-  assert.equal(app.treasuryKnown.value, true)
-  assert.equal(app.token.value, 101n)
-  assert.equal(app.treasuryBalance.value, 77n)
-  assert.equal(app.canWrite.value, false)
-  assert.equal(await app.transact('Refreshing', contract => contract.submit()), false)
-  rpcGate.resolve()
-  await until(() => app.accountReading.value)
-  assert.equal(app.accountReady.value, true)
-  assert.equal(app.token.value, 101n)
-  assert.equal(app.quests.value[0].claimed, true)
-  assert.equal(app.proposals.value[0].voted, true)
-  assert.equal(app.canWrite.value, false)
-  accountGate.resolve()
-  assert.equal(await refresh, true)
-  assert.equal(app.reading.value, false)
-  assert.equal(app.accountReading.value, false)
-  assert.equal(app.accountReady.value, true)
-  assert.equal(app.canWrite.value, true)
-  assert.equal(state.sendCount, 0)
+test('does not present treasury token balance as zero when the SPL balance read fails', () => {
+  const result = runScenario(`
+    globalThis.window = {}
+    globalThis.__rpcImpl = async (method) => {
+      if (method === 'getVersion') return { result: { solanaCore: '1.18.0' } }
+      if (method === 'getTokenSupply') return { result: { value: { amount: '1000000000', decimals: 9 } } }
+      if (method === 'getBalance') return { result: { value: 5000000000 } }
+      if (method === 'getTokenAccountsByOwner') return { error: { message: 'token account query failed' } }
+    }
+    const { useKivoraft } = await import(${JSON.stringify(moduleUrl.href)})
+    const app = useKivoraft()
+    await app.refresh()
+    console.log(JSON.stringify({ ready: app.ready.value, known: app.treasuryKnown.value, tokenKnown: app.treasuryTokenKnown.value, nativeKnown: app.treasuryNativeKnown.value, token: String(app.treasuryBalance.value), error: app.treasuryError.value }))
+  `, {
+    VITE_SOLANA_TOKEN_MINT: 'Mint111111111111111111111111111111111111111',
+    VITE_TREASURY_ADDRESS: 'Treasury111111111111111111111111111111111111'
+  })
+  assert.deepEqual(result, { ready: true, known: false, tokenKnown: false, nativeKnown: true, token: '0', error: 'Treasury data is incomplete. token balance: token account query failed' })
 })
 
-test('an obsolete hydrate cannot restore readiness after a later refresh failure', async () => {
-  const { app, state, listeners, mount } = setup()
-  await mount()
-  const gate = deferred()
-  state.accountGate = gate
-  const oldRead = listeners.accountsChanged([A])
-  await until(() => app.accountReading.value)
-  state.rpcChain = 1
-  assert.equal(await app.refresh(), false)
-  gate.resolve(); await oldRead
-  assert.equal(app.ready.value, false)
-  assert.equal(app.accountReady.value, false)
-  assert.equal(app.token.value, 0n)
-  assert.deepEqual(app.quests.value, [])
+test('rejects a detectable Phantom cluster mismatch and leaves the wallet disconnected', () => {
+  const result = runScenario(`
+    globalThis.window = { phantom: { solana: { cluster: 'mainnet-beta', connect: async () => ({ publicKey: 'Wallet111111111111111111111111111111111111' }) } } }
+    const { useKivoraft } = await import(${JSON.stringify(moduleUrl.href)})
+    const app = useKivoraft()
+    const connected = await app.connect()
+    console.log(JSON.stringify({ connected, wallet: app.wallet.value, message: app.txState.value.message }))
+  `, { VITE_SOLANA_TOKEN_MINT: 'Mint111111111111111111111111111111111111111' })
+  assert.equal(result.connected, false)
+  assert.equal(result.wallet, '')
+  assert.match(result.message, /Phantom is on mainnet-beta, but this app reads testnet/)
+})
+
+test('disconnect and account changes clear stale balances and guard late RPC responses', () => {
+  const result = runScenario(`
+    const { createRenderer, h } = await import('vue')
+    const { useKivoraft } = await import(${JSON.stringify(moduleUrl.href)})
+    const listeners = new Map()
+    let activeKey = 'Wallet111111111111111111111111111111111111'
+    const provider = {
+      cluster: 'testnet',
+      get publicKey() { return activeKey },
+      connect: async () => ({ publicKey: activeKey }),
+      on: (event, callback) => listeners.set(event, callback),
+      removeListener: event => listeners.delete(event)
+    }
+    globalThis.window = { phantom: { solana: provider } }
+    let app
+    const renderer = createRenderer({
+      createElement: type => ({ type, children: [], parent: null }),
+      createText: text => ({ text, parent: null }),
+      createComment: text => ({ comment: text, parent: null }),
+      setText: (node, text) => { node.text = text },
+      setElementText: (node, text) => { node.text = text },
+      parentNode: node => node.parent,
+      nextSibling: node => { const siblings = node.parent?.children || []; return siblings[siblings.indexOf(node) + 1] || null },
+      insert: (node, parent, anchor = null) => { node.parent = parent; const index = anchor ? parent.children.indexOf(anchor) : -1; if (index < 0) parent.children.push(node); else parent.children.splice(index, 0, node) },
+      remove: node => { const siblings = node.parent?.children || []; const index = siblings.indexOf(node); if (index >= 0) siblings.splice(index, 1); node.parent = null }
+    })
+    const root = { type: 'root', children: [], parent: null }
+    const vueApp = renderer.createApp({ setup() { app = useKivoraft(); return () => h('div') } })
+    vueApp.mount(root)
+    await app.refresh()
+    await app.connect()
+    let releaseFirstTokenRead
+    let firstTokenReadStarted
+    const started = new Promise(resolve => { firstTokenReadStarted = resolve })
+    const delayed = new Promise(resolve => { releaseFirstTokenRead = resolve })
+    globalThis.__rpcImpl = async (method, params) => {
+      if (method === 'getVersion') return { result: { solanaCore: '1.18.0' } }
+      if (method === 'getTokenSupply') return { result: { value: { amount: '1000000000', decimals: 6 } } }
+      if (method === 'getBalance') return { result: { value: params[0].startsWith('Wallet2') ? 9000000000 : 2000000000 } }
+      if (method === 'getTokenAccountsByOwner') {
+        const amount = params[0].startsWith('Wallet111') ? '111' : '222'
+        if (amount === '111') {
+          firstTokenReadStarted()
+          await delayed
+        }
+        const row = { account: { data: { parsed: { info: { tokenAmount: { amount, decimals: 6 } } } } } }
+        return { result: { value: [row] } }
+      }
+      return { result: {} }
+    }
+    activeKey = 'Wallet111111111111111111111111111111111111'
+    listeners.get('accountChanged')(activeKey)
+    await started
+    activeKey = 'Wallet222222222222222222222222222222222222'
+    const currentAccount = listeners.get('accountChanged')(activeKey)
+    await currentAccount
+    releaseFirstTokenRead()
+    await new Promise(resolve => setTimeout(resolve, 0))
+    const beforeDisconnect = { wallet: app.wallet.value, token: String(app.token.value), native: String(app.native.value), accountReady: app.accountReady.value }
+    listeners.get('disconnect')()
+    const afterDisconnect = { wallet: app.wallet.value, token: String(app.token.value), native: String(app.native.value), accountReady: app.accountReady.value }
+    vueApp.unmount()
+    console.log(JSON.stringify({ beforeDisconnect, afterDisconnect }))
+  `, {
+    VITE_SOLANA_TOKEN_MINT: 'Mint111111111111111111111111111111111111111'
+  })
+  assert.deepEqual(result.beforeDisconnect, {
+    wallet: 'Wallet222222222222222222222222222222222222', token: '222', native: '9000000000', accountReady: true
+  })
+  assert.deepEqual(result.afterDisconnect, { wallet: '', token: '0', native: '0', accountReady: false })
+})
+
+test('keeps custom RPC endpoints labeled custom and omits a guessed explorer cluster', () => {
+  const result = runScenario(`
+    globalThis.window = {}
+    const { useKivoraft } = await import(${JSON.stringify(moduleUrl.href)})
+    const app = useKivoraft()
+    console.log(JSON.stringify({ cluster: app.solanaCluster, name: app.solanaNetworkName, link: app.explorer('address', 'SomePublicKey') }))
+  `, {
+    VITE_SOLANA_TOKEN_MINT: 'Mint111111111111111111111111111111111111111',
+    VITE_SOLANA_RPC_URL: 'https://rpc.example.org/solana'
+  })
+  assert.deepEqual(result, { cluster: 'custom', name: 'Custom Solana RPC', link: 'https://explorer.solana.com/address/SomePublicKey' })
+})
+
+test('surfaces RPC failures and clears readiness', () => {
+  const result = runScenario(`
+    globalThis.window = {}
+    globalThis.__rpcImpl = async () => ({ httpStatus: 503 })
+    const { useKivoraft } = await import(${JSON.stringify(moduleUrl.href)})
+    const app = useKivoraft()
+    const refreshed = await app.refresh()
+    console.log(JSON.stringify({ refreshed, ready: app.ready.value, error: app.readError.value }))
+  `, { VITE_SOLANA_TOKEN_MINT: 'Mint111111111111111111111111111111111111111' })
+  assert.equal(result.refreshed, false)
+  assert.equal(result.ready, false)
+  assert.match(result.error, /HTTP 503/)
 })

@@ -1,0 +1,1066 @@
+{
+  "address": "D7nYqa5Y1a2MQqDQb1NpU5kVS7TxDrj92mbCY9UitHq6",
+  "metadata": {
+    "name": "kivoraft",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Kivoraft Solana community program for quests and advisory proposals"
+  },
+  "instructions": [
+    {
+      "name": "cast_vote",
+      "discriminator": [
+        20,
+        212,
+        15,
+        189,
+        69,
+        180,
+        69,
+        151
+      ],
+      "accounts": [
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "proposal",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  111,
+                  112,
+                  111,
+                  115,
+                  97,
+                  108
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "proposal.id",
+                "account": "Proposal"
+              }
+            ]
+          }
+        },
+        {
+          "name": "voter",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "receipt",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  111,
+                  116,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "proposal.id",
+                "account": "Proposal"
+              },
+              {
+                "kind": "account",
+                "path": "voter"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "support",
+          "type": "bool"
+        }
+      ]
+    },
+    {
+      "name": "claim_quest",
+      "discriminator": [
+        38,
+        197,
+        33,
+        123,
+        0,
+        108,
+        206,
+        161
+      ],
+      "accounts": [
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "quest",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  113,
+                  117,
+                  101,
+                  115,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "quest.id",
+                "account": "Quest"
+              }
+            ]
+          }
+        },
+        {
+          "name": "claimant",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "receipt",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  108,
+                  97,
+                  105,
+                  109
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "quest.id",
+                "account": "Quest"
+              },
+              {
+                "kind": "account",
+                "path": "claimant"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "create_proposal",
+      "discriminator": [
+        132,
+        116,
+        68,
+        174,
+        216,
+        160,
+        198,
+        22
+      ],
+      "accounts": [
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "creator",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "proposal",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  111,
+                  112,
+                  111,
+                  115,
+                  97,
+                  108
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "id",
+          "type": "u64"
+        },
+        {
+          "name": "description",
+          "type": "string"
+        },
+        {
+          "name": "voting_days",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "create_quest",
+      "discriminator": [
+        112,
+        49,
+        32,
+        224,
+        255,
+        173,
+        5,
+        7
+      ],
+      "accounts": [
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "config"
+          ]
+        },
+        {
+          "name": "quest",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  113,
+                  117,
+                  101,
+                  115,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "id",
+          "type": "u64"
+        },
+        {
+          "name": "title",
+          "type": "string"
+        },
+        {
+          "name": "details",
+          "type": "string"
+        },
+        {
+          "name": "max_claims",
+          "type": "u32"
+        },
+        {
+          "name": "expires_at",
+          "type": "i64"
+        }
+      ]
+    },
+    {
+      "name": "initialize",
+      "discriminator": [
+        175,
+        175,
+        109,
+        31,
+        13,
+        152,
+        155,
+        237
+      ],
+      "accounts": [
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "set_paused",
+      "discriminator": [
+        91,
+        60,
+        125,
+        192,
+        176,
+        225,
+        166,
+        218
+      ],
+      "accounts": [
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "signer": true,
+          "relations": [
+            "config"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "paused",
+          "type": "bool"
+        }
+      ]
+    },
+    {
+      "name": "set_quest_active",
+      "discriminator": [
+        95,
+        77,
+        169,
+        248,
+        220,
+        251,
+        78,
+        227
+      ],
+      "accounts": [
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "signer": true,
+          "relations": [
+            "config"
+          ]
+        },
+        {
+          "name": "quest",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  113,
+                  117,
+                  101,
+                  115,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "quest.id",
+                "account": "Quest"
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "active",
+          "type": "bool"
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "ClaimReceipt",
+      "discriminator": [
+        223,
+        233,
+        11,
+        229,
+        124,
+        165,
+        207,
+        28
+      ]
+    },
+    {
+      "name": "Config",
+      "discriminator": [
+        155,
+        12,
+        170,
+        224,
+        30,
+        250,
+        204,
+        130
+      ]
+    },
+    {
+      "name": "Proposal",
+      "discriminator": [
+        26,
+        94,
+        189,
+        187,
+        116,
+        136,
+        53,
+        33
+      ]
+    },
+    {
+      "name": "Quest",
+      "discriminator": [
+        68,
+        78,
+        51,
+        23,
+        204,
+        27,
+        76,
+        132
+      ]
+    },
+    {
+      "name": "VoteReceipt",
+      "discriminator": [
+        104,
+        20,
+        204,
+        252,
+        45,
+        84,
+        37,
+        195
+      ]
+    }
+  ],
+  "events": [
+    {
+      "name": "Initialized",
+      "discriminator": [
+        208,
+        213,
+        115,
+        98,
+        115,
+        82,
+        201,
+        209
+      ]
+    },
+    {
+      "name": "PauseChanged",
+      "discriminator": [
+        238,
+        188,
+        213,
+        78,
+        134,
+        209,
+        178,
+        218
+      ]
+    },
+    {
+      "name": "ProposalCreated",
+      "discriminator": [
+        186,
+        8,
+        160,
+        108,
+        81,
+        13,
+        51,
+        206
+      ]
+    },
+    {
+      "name": "QuestClaimed",
+      "discriminator": [
+        49,
+        134,
+        11,
+        29,
+        35,
+        182,
+        38,
+        197
+      ]
+    },
+    {
+      "name": "QuestCreated",
+      "discriminator": [
+        179,
+        90,
+        201,
+        178,
+        90,
+        69,
+        73,
+        67
+      ]
+    },
+    {
+      "name": "QuestStatusChanged",
+      "discriminator": [
+        52,
+        219,
+        98,
+        8,
+        198,
+        132,
+        240,
+        148
+      ]
+    },
+    {
+      "name": "VoteCast",
+      "discriminator": [
+        39,
+        53,
+        195,
+        104,
+        188,
+        17,
+        225,
+        213
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "Unauthorized",
+      "msg": "Only the configured program authority may perform this action."
+    },
+    {
+      "code": 6001,
+      "name": "Paused",
+      "msg": "Program actions are paused."
+    },
+    {
+      "code": 6002,
+      "name": "InvalidId",
+      "msg": "The account identifier is out of sequence."
+    },
+    {
+      "code": 6003,
+      "name": "InvalidTitle",
+      "msg": "The title must contain 1 to 80 UTF-8 bytes."
+    },
+    {
+      "code": 6004,
+      "name": "TextTooLong",
+      "msg": "The supplied text exceeds its on-chain byte limit."
+    },
+    {
+      "code": 6005,
+      "name": "InvalidLimit",
+      "msg": "The claim limit must be greater than zero."
+    },
+    {
+      "code": 6006,
+      "name": "InvalidExpiry",
+      "msg": "The quest expiry must be in the future."
+    },
+    {
+      "code": 6007,
+      "name": "QuestInactive",
+      "msg": "The quest is not active."
+    },
+    {
+      "code": 6008,
+      "name": "QuestExpired",
+      "msg": "The quest has expired."
+    },
+    {
+      "code": 6009,
+      "name": "QuestFull",
+      "msg": "The quest has reached its claim limit."
+    },
+    {
+      "code": 6010,
+      "name": "InvalidProposal",
+      "msg": "Proposal text must contain at least 10 and at most 2,000 UTF-8 bytes."
+    },
+    {
+      "code": 6011,
+      "name": "InvalidVotingPeriod",
+      "msg": "Voting duration must be from 1 to 30 days."
+    },
+    {
+      "code": 6012,
+      "name": "VotingClosed",
+      "msg": "Voting has closed."
+    },
+    {
+      "code": 6013,
+      "name": "ArithmeticOverflow",
+      "msg": "An arithmetic operation overflowed."
+    }
+  ],
+  "types": [
+    {
+      "name": "ClaimReceipt",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "quest_id",
+            "type": "u64"
+          },
+          {
+            "name": "claimant",
+            "type": "pubkey"
+          },
+          {
+            "name": "claimed_at",
+            "type": "i64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Config",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "next_quest_id",
+            "type": "u64"
+          },
+          {
+            "name": "next_proposal_id",
+            "type": "u64"
+          },
+          {
+            "name": "paused",
+            "type": "bool"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Initialized",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "authority",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PauseChanged",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "paused",
+            "type": "bool"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Proposal",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "id",
+            "type": "u64"
+          },
+          {
+            "name": "creator",
+            "type": "pubkey"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "created_at",
+            "type": "i64"
+          },
+          {
+            "name": "ends_at",
+            "type": "i64"
+          },
+          {
+            "name": "for_votes",
+            "type": "u64"
+          },
+          {
+            "name": "against_votes",
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ProposalCreated",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "id",
+            "type": "u64"
+          },
+          {
+            "name": "creator",
+            "type": "pubkey"
+          },
+          {
+            "name": "ends_at",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Quest",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "id",
+            "type": "u64"
+          },
+          {
+            "name": "creator",
+            "type": "pubkey"
+          },
+          {
+            "name": "title",
+            "type": "string"
+          },
+          {
+            "name": "details",
+            "type": "string"
+          },
+          {
+            "name": "max_claims",
+            "type": "u32"
+          },
+          {
+            "name": "claim_count",
+            "type": "u32"
+          },
+          {
+            "name": "expires_at",
+            "type": "i64"
+          },
+          {
+            "name": "active",
+            "type": "bool"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "QuestClaimed",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "id",
+            "type": "u64"
+          },
+          {
+            "name": "claimant",
+            "type": "pubkey"
+          },
+          {
+            "name": "claimed_at",
+            "type": "i64"
+          },
+          {
+            "name": "claim_count",
+            "type": "u32"
+          }
+        ]
+      }
+    },
+    {
+      "name": "QuestCreated",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "id",
+            "type": "u64"
+          },
+          {
+            "name": "creator",
+            "type": "pubkey"
+          },
+          {
+            "name": "expires_at",
+            "type": "i64"
+          },
+          {
+            "name": "max_claims",
+            "type": "u32"
+          }
+        ]
+      }
+    },
+    {
+      "name": "QuestStatusChanged",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "id",
+            "type": "u64"
+          },
+          {
+            "name": "active",
+            "type": "bool"
+          }
+        ]
+      }
+    },
+    {
+      "name": "VoteCast",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "id",
+            "type": "u64"
+          },
+          {
+            "name": "voter",
+            "type": "pubkey"
+          },
+          {
+            "name": "support",
+            "type": "bool"
+          },
+          {
+            "name": "voted_at",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "VoteReceipt",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "proposal_id",
+            "type": "u64"
+          },
+          {
+            "name": "voter",
+            "type": "pubkey"
+          },
+          {
+            "name": "support",
+            "type": "bool"
+          },
+          {
+            "name": "voted_at",
+            "type": "i64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    }
+  ]
+}

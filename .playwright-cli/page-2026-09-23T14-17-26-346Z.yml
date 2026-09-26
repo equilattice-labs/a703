@@ -1,0 +1,120 @@
+- generic [ref=e3]:
+  - link "Skip to content":
+    - /url: "#main"
+  - banner [ref=e4]:
+    - button "Kivoraft home" [ref=e5] [cursor=pointer]:
+      - generic [ref=e6]:
+        - text: kivoraft
+        - generic [ref=e7]: A collective in motion
+    - navigation "Main navigation" [ref=e8]:
+      - button "Overview" [ref=e9] [cursor=pointer]
+      - button "Quests" [ref=e10] [cursor=pointer]
+      - button "Stake" [ref=e11] [cursor=pointer]
+      - button "Governance" [ref=e12] [cursor=pointer]
+      - button "Treasury" [ref=e13] [cursor=pointer]
+      - button "Guide" [ref=e14] [cursor=pointer]
+    - generic [ref=e15]:
+      - generic "Solana Devnet selected" [ref=e16]: devnet
+      - button "Connect wallet" [ref=e18] [cursor=pointer]
+  - generic [ref=e22]:
+    - main [ref=e23]:
+      - generic [ref=e24]:
+        - paragraph [ref=e28]:
+          - strong [ref=e29]: Preview mode.
+          - text: No token mint is configured and the community program is not connected. Sample content is shown; actions submit nothing.
+        - button "How it works" [ref=e30] [cursor=pointer]
+      - generic [ref=e33]:
+        - generic [ref=e34]:
+          - generic [ref=e35]: SOLANA COMMUNITY TERMINAL
+          - generic [ref=e36]:
+            - text: SOLANA
+            - generic [ref=e37]: /
+            - text: DEVNET
+        - generic [ref=e38]:
+          - generic [ref=e39]:
+            - heading [level=1] [ref=e40]:
+              - text: Good work.
+              - emphasis [ref=e41]: Shared
+              - text: momentum.
+            - paragraph [ref=e44]: A little time. A useful idea. A step forward.Put your part into something we build together.
+            - generic [ref=e45]:
+              - button "Find your first quest" [ref=e46] [cursor=pointer]
+              - button "Take a look around" [ref=e49] [cursor=pointer]
+          - generic [aria-hidden] [ref=e52]:
+            - generic [ref=e53]:
+              - generic [ref=e54]: PARTS BECOME PROGRESS
+              - generic [ref=e55]: FIG. 01
+            - generic [ref=e68]:
+              - generic [ref=e69]: 01 CONTRIBUTE 02 COMMIT 03 COORDINATE
+              - generic [ref=e70]:
+                - text: One step.
+                - emphasis [ref=e71]: All of us.
+        - region "Community statistics" [ref=e72]:
+          - generic [ref=e73]:
+            - generic [ref=e74]: THE COMMON GROUND
+            - paragraph [ref=e75]: Preview - sample workspace
+          - generic [ref=e77]:
+            - strong [ref=e78]: "-"
+            - generic [ref=e79]: Open quests
+          - generic [ref=e80]:
+            - strong [ref=e81]: Not configured
+            - generic [ref=e82]: Token staking
+          - generic [ref=e83]:
+            - strong [ref=e84]: "-"
+            - generic [ref=e85]: Ideas open for a vote
+        - generic [ref=e86]:
+          - generic [ref=e87]:
+            - generic [ref=e88]:
+              - generic [ref=e89]:
+                - generic [ref=e90]: 01 / START SOMEWHERE
+                - heading "Pick up a little purpose." [level=2] [ref=e91]
+              - button "All quests" [ref=e92] [cursor=pointer]
+            - generic [ref=e95]:
+              - button "01 SAMPLE QUEST Read the Kivoraft charter 12 KVRF" [ref=e96] [cursor=pointer]:
+                - generic [ref=e97]: "01"
+                - generic [ref=e98]:
+                  - generic [ref=e99]: SAMPLE QUEST
+                  - strong [ref=e100]: Read the Kivoraft charter
+                - generic [ref=e101]: 12 KVRF
+              - button "02 SAMPLE QUEST Map a useful signal 28 KVRF" [ref=e104] [cursor=pointer]:
+                - generic [ref=e105]: "02"
+                - generic [ref=e106]:
+                  - generic [ref=e107]: SAMPLE QUEST
+                  - strong [ref=e108]: Map a useful signal
+                - generic [ref=e109]: 28 KVRF
+              - button "03 SAMPLE QUEST Review a treasury route 45 KVRF" [ref=e112] [cursor=pointer]:
+                - generic [ref=e113]: "03"
+                - generic [ref=e114]:
+                  - generic [ref=e115]: SAMPLE QUEST
+                  - strong [ref=e116]: Review a treasury route
+                - generic [ref=e117]: 45 KVRF
+          - complementary [ref=e120]:
+            - generic [ref=e121]: MAKE YOURSELF AT HOME
+            - heading [level=2] [ref=e122]:
+              - text: New here?
+              - emphasis [ref=e123]: Start with why.
+            - paragraph [ref=e124]: Understand the tools, meet the possibilities, and find your own way to take part.
+            - button "Your five-minute guide" [ref=e125] [cursor=pointer]
+            - generic [aria-hidden] [ref=e128]: ↗
+        - region "More ways to participate" [ref=e129]:
+          - generic [ref=e130]:
+            - generic [ref=e131]: KEEP THINGS MOVING
+            - heading "There is more than one way in." [level=2] [ref=e132]: There is morethan one way in.
+          - button "02 / TOKEN DETAILS Plan token features. Locking and rewards wait for a verified mint and clear terms." [ref=e133] [cursor=pointer]:
+            - generic [ref=e134]: 02 / TOKEN DETAILS
+            - strong [ref=e138]: Plan token features.
+            - paragraph [ref=e139]: Locking and rewards wait for a verified mint and clear terms.
+          - button "03 / COORDINATE Bring an idea. Help decide where we go next." [ref=e140] [cursor=pointer]:
+            - generic [ref=e141]: 03 / COORDINATE
+            - strong [ref=e145]: Bring an idea.
+            - paragraph [ref=e146]: Help decide where we go next.
+          - button "04 / VERIFY See the whole. Shared resources. Open records." [ref=e147] [cursor=pointer]:
+            - generic [ref=e148]: 04 / VERIFY
+            - strong [ref=e152]: See the whole.
+            - paragraph [ref=e153]: Shared resources. Open records.
+    - contentinfo [ref=e154]:
+      - generic [ref=e155]:
+        - text: © 2026 Kivoraft
+        - generic [ref=e156]: ·
+        - text: Build together. Shared momentum.
+      - generic [ref=e157]: Independent community project Solana Devnet
