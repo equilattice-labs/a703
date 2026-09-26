@@ -13,7 +13,7 @@ import { supportsSolanaCluster } from './wallet-networks.js'
 import {
   asAnchorU64, claimPda, communityPda, createProgramClient,
   fetchCommunity, proposalPda, questPda, votePda,
-} from './kivoraft-program.js'
+} from './solkintra-program.js'
 
 const rpcRequest = async (method, params = []) => {
   if (SOLANA_CONFIG_ERROR) throw new Error(SOLANA_CONFIG_ERROR)
@@ -47,14 +47,14 @@ const supportedCluster = value => {
   return normalized === 'mainnet' ? 'mainnet-beta' : normalized
 }
 
-export function useKivoraft() {
+export function useSolkintra() {
   // Token reads and program actions are independent. Quest/vote actions use
   // the Anchor interface; staking remains unavailable until a mint is supplied.
   const mintConfigured = Boolean(TOKEN_MINT_ADDRESS)
   const configured = Boolean(PROGRAM_ID)
   const programReady = ref(false)
-  const tokenName = ref(TOKEN_NAME || (mintConfigured ? '' : 'Kivoraft preview token'))
-  const tokenSymbol = ref(TOKEN_SYMBOL || (mintConfigured ? 'SPL' : 'KVRF'))
+  const tokenName = ref(TOKEN_NAME || (mintConfigured ? '' : 'Solkintra preview token'))
+  const tokenSymbol = ref(TOKEN_SYMBOL || (mintConfigured ? 'SPL' : 'SKTR'))
   const tokenDecimals = ref(TOKEN_DECIMALS)
   const tokenDecimalsKnown = ref(false)
   let injected, walletEpoch = 0, refreshPromise, timer
@@ -110,7 +110,7 @@ export function useKivoraft() {
           ? SOLANA_CLUSTER
           : 'testnet'
       metamaskClient = await createSolanaClient({
-        dapp: { name: 'Kivoraft', url: window.location.origin },
+        dapp: { name: 'Solkintra', url: window.location.origin },
         api: { supportedNetworks: { [metamaskNetwork]: SOLANA_RPC_URL } },
         analytics: { enabled: false },
       })

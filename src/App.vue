@@ -1,15 +1,15 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, nextTick, watch } from "vue";
-import { useKivoraft } from "./useKivoraft";
+import { useSolkintra } from "./useSolkintra";
 import {
   SOLANA_CLUSTER,
   SOLANA_NETWORK_NAME,
   TOKEN_MINT_ADDRESS,
 } from "./solana.js";
-import kivoraftMark from "./assets/kivoraft-mark.svg";
+import solkintraMark from "./assets/solkintra-mark.svg";
 import Icon from "./Icon.vue";
 
-const kivoraft = useKivoraft();
+const solkintra = useSolkintra();
 const {
   configured,
   mintConfigured,
@@ -64,7 +64,7 @@ const {
   questStatus,
   proposalStatus,
   votePercent,
-} = kivoraft;
+} = solkintra;
 const mobileMenu = ref(false);
 const validTabs = [
   "home",
@@ -124,7 +124,7 @@ const samples = [
   {
     id: "sample-1",
     sample: true,
-    title: "Read the Kivoraft charter",
+    title: "Read the Solkintra charter",
     reward: 12n * 10n ** 9n,
     detail: "A sample welcome quest. Learn how rewards and stewardship work.",
   },
@@ -160,12 +160,12 @@ const clearedDraft = ref(null);
 watch(proposalText, (text) => {
   if (text) clearedDraft.value = null;
 });
-const draftKey = "kivoraft-proposal-draft";
+const draftKey = "solkintra-proposal-draft";
 try {
   // Migrate unfinished drafts from previous application brands once.
   const legacyDraftKeys = [
     "pactelora-proposal-draft",
-    "kivoraft-proposal-draft",
+    "solkintra-proposal-draft",
     "quorivana-proposal-draft",
     "ralliva-proposal-draft",
   ];
@@ -383,11 +383,11 @@ async function setQuest(q) {
       >Skip to content</a
     >
     <header class="site-header" @keydown.esc="closeMenu">
-      <button class="brand" aria-label="Kivoraft home" @click="go('home')">
-        <img :src="kivoraftMark" width="34" height="34" alt="" />
+      <button class="brand" aria-label="Solkintra home" @click="go('home')">
+        <img :src="solkintraMark" width="34" height="34" alt="" />
         <span
-          >kivoraft<span class="brand-caption"
-            >A collective in motion</span
+          >solkintra<span class="brand-caption"
+            >SOLANA COMMUNITY TERMINAL</span
           ></span
         >
       </button>
@@ -407,7 +407,7 @@ async function setQuest(q) {
           <span>{{ n[1] }}</span
           ><Icon name="arrow" :size="17" />
         </button>
-        <span class="mobile-nav-caption">Small actions. Shared momentum.</span>
+        <span class="mobile-nav-caption">Routes in. Proof out.</span>
       </nav>
       <div class="topbar-actions">
         <span class="network-button" :aria-label="`${SOLANA_NETWORK_NAME} selected`">
@@ -518,25 +518,25 @@ async function setQuest(q) {
           </div>
           <div class="home-hero">
             <div class="hero-copy">
-              <h1>Good work.<br /><em>Shared</em><br />momentum.</h1>
+              <h1>Ship small.<br /><em>Prove</em><br />on-chain.</h1>
               <div class="hero-intro">
                 <span class="intro-rule" aria-hidden="true"></span>
                 <p>
-                  A little time. A useful idea. A step forward.<br />Put your
-                  part into something we build together.
+                  Quests, proposals, and treasury reads in one Solana workspace.<br />Trace the next route from wallet connect to public proof.<!--
+                  -->
                 </p>
               </div>
               <div class="hero-actions">
                 <button class="primary" @click="go('quests')">
-                  Find your first quest <Icon :size="19" /></button
+                  Open quests <Icon :size="19" /></button
                 ><button class="text-button" @click="go('learn')">
-                  Take a look around <Icon name="external" :size="17" />
+                  View the token lane <Icon name="external" :size="17" />
                 </button>
               </div>
             </div>
             <div class="momentum-art" aria-hidden="true">
               <div class="art-index">
-                <span>PARTS BECOME PROGRESS</span><span>FIG. 01</span>
+                <span>ROUTE / PROOF / VOTE</span><span>FIG. 01</span>
               </div>
               <svg class="momentum-path" viewBox="0 0 480 450" fill="none">
                 <path
@@ -593,16 +593,16 @@ async function setQuest(q) {
                 />
               </svg>
               <div class="art-bottom">
-                <span>01 CONTRIBUTE<br />02 COMMIT<br />03 COORDINATE</span
+                <span>01 CONNECT<br />02 CONTRIBUTE<br />03 COORDINATE</span
                 ><span class="art-seal"
-                  >One step.<br /><em>All of us.</em></span
+                  >One route.<br /><em>On-chain.</em></span
                 >
               </div>
             </div>
           </div>
           <section class="community-strip" aria-label="Community statistics">
             <div class="strip-intro">
-              <span class="eyebrow">THE COMMON GROUND</span>
+              <span class="eyebrow">MARKET PULSE</span>
               <p>
                 <span class="status-dot"></span
                 >{{
@@ -939,7 +939,7 @@ async function setQuest(q) {
                     v-model="adminTitle"
                     maxlength="80"
                     required
-                    placeholder="Welcome to Kivoraft" /></label
+                    placeholder="Welcome to Solkintra" /></label
                 ><label>Quest details<textarea
                     v-model="adminDetails"
                     maxlength="240"
@@ -1195,7 +1195,7 @@ async function setQuest(q) {
                   {{
                     readError
                       ? "Use Try again above to reconnect."
-                      : "Start the first Kivoraft discussion with a clear idea and a voting period."
+                      : "Start the first Solkintra proposal with a clear idea and a voting period."
                   }}
                 </p>
                 <button
@@ -1412,8 +1412,8 @@ async function setQuest(q) {
                   </div>
                 </dl>
                 <p class="fine-print">
-                  Kivoraft is the app brand.
-                  {{ mintConfigured ? `Decimals are read from the mint (${tokenDecimals}); display name and ticker metadata are pending.` : "No token mint is deployed or configured. KVRF is only a preview label." }}
+                  Solkintra is the app brand.
+                  {{ mintConfigured ? `Decimals are read from the mint (${tokenDecimals}); display name and ticker metadata are pending.` : "No token mint is deployed or configured. SKTR is only a preview label." }}
                 </p>
               </article>
             </div>
@@ -1461,7 +1461,7 @@ async function setQuest(q) {
         <section v-if="tab === 'learn'" class="page learn">
           <div class="page-head">
             <div>
-              <span class="eyebrow">THE KIVORAFT FIELD GUIDE</span>
+              <span class="eyebrow">THE SOLKINTRA FIELD GUIDE</span>
               <h1>A way in.<br /><em>A way forward.</em></h1>
               <p>
                 A few things to know before your first contribution. Follow the
@@ -1605,27 +1605,27 @@ async function setQuest(q) {
               </details>
               <details>
                 <summary>
-                  Why is the token name different from Kivoraft?
+                  Why is the token name different from Solkintra?
                 </summary>
                 <p>
                   The future mint will define the token name, symbol and decimals.
-                  Kivoraft is the application brand, while KVRF is only a preview
+                  Solkintra is the application brand, while SKTR is only a preview
                   label today. Current token details: {{ tokenIdentity }}.
                 </p>
               </details>
               <details>
-                <summary>Is a Kivoraft token deployed?</summary>
+                <summary>Is a Solkintra token deployed?</summary>
                 <p>
-                  No Kivoraft token mint is configured. KVRF is a preview label
+                  No Solkintra token mint is configured. SKTR is a preview label
                   only; the community program does not create or distribute a
                   token. A mint's name, symbol, decimals, and address will be
                   shown after they are provided and verified.
                 </p>
               </details>
               <details>
-                <summary>Is Kivoraft an official Solana product?</summary>
+                <summary>Is Solkintra an official Solana product?</summary>
                 <p>
-                  No. Kivoraft is an independent community project currently
+                  No. Solkintra is an independent community project currently
                   configured for {{ SOLANA_NETWORK_NAME }}. It is not affiliated
                   with the Solana Foundation.
                 </p>
@@ -1646,14 +1646,9 @@ async function setQuest(q) {
           </div>
         </section>
       </main>
-      <footer>
-        <span
-          >© 2026 Kivoraft <span class="footer-separator">·</span> Build together.
-          Shared momentum.</span
-        ><span
-          >Independent community project
-          <span class="footer-dot"></span> {{ SOLANA_NETWORK_NAME }}</span
-        >
+            <footer>
+        <span>© 2026 Solkintra <span class="footer-separator">·</span> Find your route on-chain.</span>
+        <span>Independent community project <span class="footer-dot"></span> {{ SOLANA_NETWORK_NAME }}</span>
       </footer>
     </div>
     <aside

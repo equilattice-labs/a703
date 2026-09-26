@@ -1,11 +1,11 @@
-Kivoraft / kivoraft / KVRF (provisional preview label, not an issued symbol)
-Build together. Move on-chain.
-Meaning: kin + orbit + craft; community actions built into a shared route.
-Preferred domain candidate: kivoraft.xyz; alternatives: kivoraft.fun / kivoraft.top.
-X candidate: @kivoraft. Availability evidence: output/branding/kivoraft/research.md.
+Solkintra / solkintra / SKTR (provisional preview label, not an issued symbol)
+Find your route on-chain.
+Meaning: Sol + kin + intra; a Solana-native circle for shared actions.
+Preferred domain candidate: solkintra.xyz; alternatives: solkintra.fun / solkintra.top.
+X candidate: @solkintra. Availability evidence: output/branding/solkintra/research.md.
 No domain or social account was registered, acquired, reserved, or published by this update.
 
-Visual: dark crypto community interface with mint teal, cyan, and amber accents.
+Visual: dark crypto community interface with neon lime, cyan, and amber accents.
 Experience: overview, preview quests, token status, advisory governance,
 read-only treasury details, and a participation guide. Token locking and rewards
 are disabled until a mint and token custody/funding rules are supplied.
@@ -15,7 +15,7 @@ Mobile: expandable navigation, compact ledger cards, no horizontal overflow.
 Network: Solana Testnet (`solana:testnet`).
 RPC: https://api.testnet.solana.com
 Explorer: https://explorer.solana.com/?cluster=testnet
-No token mint has been supplied. KVRF is a temporary UI label only. A provided
+No token mint has been supplied. SKTR is a temporary UI label only. A provided
 mint can enable read-only supply and SPL balance reads; it does not enable token
 actions. The Anchor community program is implemented and locally integration
 tested. Its interface records quest participation and advisory votes only.
