@@ -1,8 +1,8 @@
-Kintrava / kintrava / KNTV (provisional preview label, not an issued symbol)
-Move together on-chain.
-Meaning: kin + traverse; members moving through shared on-chain routes.
-Preferred domain candidate: kintrava.xyz; alternatives: kintrava.fun / kintrava.top.
-X candidate: @kintrava. Availability evidence: output/branding/kintrava/research.md.
+Oncivra / oncivra / OCVR (provisional preview label, not an issued symbol)
+Coordinate clearly on-chain.
+Meaning: on-chain + civic; clear participation and shared decisions.
+Preferred domain candidate: oncivra.xyz; alternatives: oncivra.fun / oncivra.top.
+X candidate: @oncivra. Availability evidence: output/branding/oncivra/research.md.
 No domain or social account was registered, acquired, reserved, or published by this update.
 
 Visual: dark crypto community interface with neon lime, cyan, and amber accents.
@@ -15,7 +15,7 @@ Mobile: expandable navigation, compact ledger cards, no horizontal overflow.
 Network: Solana Testnet (`solana:testnet`).
 RPC: https://api.testnet.solana.com
 Explorer: https://explorer.solana.com/?cluster=testnet
-No token mint has been supplied. KNTV is a temporary UI label only. A provided
+No token mint has been supplied. OCVR is a temporary UI label only. A provided
 mint can enable read-only supply and SPL balance reads; it does not enable token
 actions. The Anchor community program is implemented and locally integration
 tested. Its interface records quest participation and advisory votes only.
@@ -24,7 +24,7 @@ The community program is deployed and its config account is initialized at
 quest participation and advisory votes only. Mint decimals come from Solana RPC.
 Name and ticker metadata remain pending; environment values are display labels only.
 The deployed Anchor crate/module keeps its technical name `kivoraft` for compatibility;
-Kintrava is the application brand. The program address and account interface are unchanged.
+Oncivra is the application brand. The program address and account interface are unchanged.
 
 The old Solidity project is kept under `contracts/` as historical EVM material.
 It is not a Solana program and its deployment entrypoint is disabled.

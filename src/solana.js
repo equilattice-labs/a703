@@ -1,6 +1,6 @@
-﻿// Keep the cluster, RPC, and explorer links aligned. Testnet is the default
+// Keep the cluster, RPC, and explorer links aligned. Testnet is the default
 // because the community program is deployed there.
-const env = import.meta.env || globalThis.__KINTRAVA_ENV__ || (typeof process !== 'undefined' ? process.env : {})
+const env = import.meta.env || globalThis.__ONCIVRA_ENV__ || (typeof process !== 'undefined' ? process.env : {})
 const value = key => {
   const candidate = env[key]
   return candidate !== undefined && candidate !== null && String(candidate).trim() ? String(candidate).trim() : ''

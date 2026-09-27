@@ -1,10 +1,10 @@
 {
   "address": "D7nYqa5Y1a2MQqDQb1NpU5kVS7TxDrj92mbCY9UitHq6",
   "metadata": {
-    "name": "kintrava",
+    "name": "kivoraft",
     "version": "0.1.0",
     "spec": "0.1.0",
-    "description": "Kintrava Solana community program for quests and advisory proposals"
+    "description": "Kivoraft Solana community program for quests and advisory proposals"
   },
   "instructions": [
     {

@@ -1,15 +1,15 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, nextTick, watch } from "vue";
-import { useKintrava } from "./useKintrava";
+import { useOncivra } from "./useOncivra";
 import {
   SOLANA_CLUSTER,
   SOLANA_NETWORK_NAME,
   TOKEN_MINT_ADDRESS,
 } from "./solana.js";
-import kintravaMark from "./assets/kintrava-mark.svg";
+import oncivraMark from "./assets/oncivra-mark.svg";
 import Icon from "./Icon.vue";
 
-const kintrava = useKintrava();
+const oncivra = useOncivra();
 const {
   configured,
   mintConfigured,
@@ -64,7 +64,7 @@ const {
   questStatus,
   proposalStatus,
   votePercent,
-} = kintrava;
+} = oncivra;
 const mobileMenu = ref(false);
 const validTabs = [
   "home",
@@ -124,7 +124,7 @@ const samples = [
   {
     id: "sample-1",
     sample: true,
-    title: "Read the Kintrava charter",
+    title: "Read the Oncivra charter",
     reward: 12n * 10n ** 9n,
     detail: "A sample welcome quest. Learn how rewards and stewardship work.",
   },
@@ -160,7 +160,7 @@ const clearedDraft = ref(null);
 watch(proposalText, (text) => {
   if (text) clearedDraft.value = null;
 });
-const draftKey = "kintrava-proposal-draft";
+const draftKey = "oncivra-proposal-draft";
 try {
   // Migrate unfinished drafts from previous application brands once.
   const legacyDraftKeys = [
@@ -383,10 +383,10 @@ async function setQuest(q) {
       >Skip to content</a
     >
     <header class="site-header" @keydown.esc="closeMenu">
-      <button class="brand" aria-label="Kintrava home" @click="go('home')">
-        <img :src="kintravaMark" width="34" height="34" alt="" />
+      <button class="brand" aria-label="Oncivra home" @click="go('home')">
+        <img :src="oncivraMark" width="34" height="34" alt="" />
         <span
-          >kintrava<span class="brand-caption"
+          >oncivra<span class="brand-caption"
             >SOLANA COMMUNITY COORDINATION</span
           ></span
         >
@@ -511,94 +511,60 @@ async function setQuest(q) {
 
         <section v-if="tab === 'home'" class="overview">
           <div class="home-masthead">
-            <span class="eyebrow">ON-CHAIN COMMUNITY</span
+            <span class="eyebrow">COMMUNITY OVERVIEW</span
             ><span class="edition-label"
               >SOLANA <span> / </span> {{ SOLANA_CLUSTER === "mainnet-beta" ? "MAINNET" : SOLANA_CLUSTER.toUpperCase() }}</span
             >
           </div>
           <div class="home-hero">
             <div class="hero-copy">
-              <h1>Ship small.<br /><em>Prove</em><br />on-chain.</h1>
+              <h1>Community<br /><em>dashboard.</em></h1>
               <div class="hero-intro">
                 <span class="intro-rule" aria-hidden="true"></span>
                 <p>
-                  Quests, proposals, and treasury reads in one Solana workspace.<br /> Trace the next route from wallet connect to public proof.<!--
+                  Your wallet, active quests, and community proposals on Solana in one view.<!--
                   -->
                 </p>
               </div>
               <div class="hero-actions">
                 <button class="primary" @click="go('quests')">
-                  Open quests <Icon :size="19" /></button
-                ><button class="text-button" @click="go('learn')">
-                  View the token lane <Icon name="external" :size="17" />
+                  Browse quests <Icon :size="19" /></button
+                ><button class="text-button" @click="go('governance')">
+                  View proposals <Icon :size="17" />
                 </button>
               </div>
             </div>
-            <div class="momentum-art" aria-hidden="true">
-              <div class="art-index">
-                <span>ROUTE / PROOF / VOTE</span><span>FIG. 01</span>
+            <section class="portfolio-panel" aria-label="Wallet overview">
+              <div class="portfolio-heading">
+                <div>
+                  <span class="eyebrow">WALLET OVERVIEW</span>
+                  <strong>{{ connected ? short(wallet) : "No wallet connected" }}</strong>
+                </div>
+                <span class="badge" :class="{ open: connected && accountReady }">{{ connected ? accountReady ? "Connected" : "Syncing" : "Preview" }}</span>
               </div>
-              <svg class="momentum-path" viewBox="0 0 480 450" fill="none">
-                <path
-                  d="M-40 394H97V297H195V200H292V103H522"
-                  stroke="#b9c6b1"
-                  stroke-width="1"
-                />
-                <path
-                  d="M-40 416H119V319H217V222H314V125H522"
-                  stroke="#b9c6b1"
-                  stroke-width="1"
-                />
-                <path
-                  d="M-40 438H141V341H239V244H336V147H522"
-                  stroke="#b9c6b1"
-                  stroke-width="1"
-                />
-                <path
-                  d="M-40 372H75V275H173V178H270V81H522"
-                  stroke="#b9c6b1"
-                  stroke-width="1"
-                />
-                <path
-                  d="M-40 350H53V253H151V156H248V59H522"
-                  stroke="#b9c6b1"
-                  stroke-width="1"
-                />
-                <path
-                  d="M-40 328H31V231H129V134H226V37H522"
-                  stroke="#b9c6b1"
-                  stroke-width="1"
-                />
-                <path
-                  d="M-15 330H100V233H197V136H294V39H481"
-                  stroke="#173c32"
-                  stroke-width="61"
-                  stroke-linejoin="miter"
-                />
-                <path
-                  d="M-15 330H100V233H197V136H294V39H481"
-                  stroke="#f6f5f0"
-                  stroke-opacity=".45"
-                  stroke-width="1"
-                />
-                <path
-                  d="M195 295L362 128H303V66H467V230H405V171L238 338Z"
-                  fill="#d9ee77"
-                />
-                <path d="M215 315L436 94" stroke="#173c32" stroke-width="1" />
-                <path
-                  d="M49 399H63M56 392V406"
-                  stroke="#173c32"
-                  stroke-width="1"
-                />
-              </svg>
-              <div class="art-bottom">
-                <span>01 CONNECT<br />02 CONTRIBUTE<br />03 COORDINATE</span
-                ><span class="art-seal"
-                  >One route.<br /><em>On-chain.</em></span
-                >
+              <div class="portfolio-total">
+                <span>AVAILABLE BALANCE</span>
+                <strong>{{ connected && accountReady ? solUnits(native, 4) : "—" }} <small>SOL</small></strong>
+                <span>Native balance on {{ SOLANA_NETWORK_NAME }}</span>
               </div>
-            </div>
+              <div class="portfolio-assets">
+                <div class="portfolio-asset">
+                  <span class="asset-symbol sol">◎</span>
+                  <span><strong>Solana</strong><small>Native asset</small></span>
+                  <b>{{ connected && accountReady ? `${solUnits(native, 4)} SOL` : "Connect wallet" }}</b>
+                </div>
+                <div class="portfolio-asset">
+                  <span class="asset-symbol token">O</span>
+                  <span><strong>{{ mintConfigured ? tokenSymbol : "Community token" }}</strong><small>{{ mintConfigured ? tokenName || "SPL token" : "No mint configured" }}</small></span>
+                  <b>{{ mintConfigured && connected && accountReady ? `${units(token)} ${tokenSymbol}` : "—" }}</b>
+                </div>
+              </div>
+              <div class="portfolio-footer">
+                <span><i class="status-dot"></i>{{ SOLANA_NETWORK_NAME }}</span>
+                <button v-if="!connected" class="connect-inline" :disabled="connecting || busy" @click="connect">Connect wallet <Icon name="wallet" :size="15" /></button>
+                <span v-else>{{ accountReady ? "Wallet synced" : "Reading wallet" }}</span>
+              </div>
+            </section>
           </div>
           <section class="community-strip" aria-label="Community statistics">
             <div class="strip-intro">
@@ -939,7 +905,7 @@ async function setQuest(q) {
                     v-model="adminTitle"
                     maxlength="80"
                     required
-                    placeholder="Welcome to Kintrava" /></label
+                    placeholder="Welcome to Oncivra" /></label
                 ><label>Quest details<textarea
                     v-model="adminDetails"
                     maxlength="240"
@@ -1195,7 +1161,7 @@ async function setQuest(q) {
                   {{
                     readError
                       ? "Use Try again above to reconnect."
-                      : "Start the first Kintrava proposal with a clear idea and a voting period."
+                      : "Start the first Oncivra proposal with a clear idea and a voting period."
                   }}
                 </p>
                 <button
@@ -1412,8 +1378,8 @@ async function setQuest(q) {
                   </div>
                 </dl>
                 <p class="fine-print">
-                  Kintrava is the app brand.
-                  {{ mintConfigured ? `Decimals are read from the mint (${tokenDecimals}); display name and ticker metadata are pending.` : "No token mint is deployed or configured. KNTV is only a preview label." }}
+                  Oncivra is the app brand.
+                  {{ mintConfigured ? `Decimals are read from the mint (${tokenDecimals}); display name and ticker metadata are pending.` : "No token mint is deployed or configured. OCVR is only a preview label." }}
                 </p>
               </article>
             </div>
@@ -1461,7 +1427,7 @@ async function setQuest(q) {
         <section v-if="tab === 'learn'" class="page learn">
           <div class="page-head">
             <div>
-              <span class="eyebrow">THE KINTRAVA FIELD GUIDE</span>
+              <span class="eyebrow">THE ONCIVRA FIELD GUIDE</span>
               <h1>A way in.<br /><em>A way forward.</em></h1>
               <p>
                 A few things to know before your first contribution. Follow the
@@ -1605,27 +1571,27 @@ async function setQuest(q) {
               </details>
               <details>
                 <summary>
-                  Why is the token name different from Kintrava?
+                  Why is the token name different from Oncivra?
                 </summary>
                 <p>
                   The future mint will define the token name, symbol and decimals.
-                  Kintrava is the application brand, while KNTV is only a preview
+                  Oncivra is the application brand, while OCVR is only a preview
                   label today. Current token details: {{ tokenIdentity }}.
                 </p>
               </details>
               <details>
-                <summary>Is a Kintrava token deployed?</summary>
+                <summary>Is an Oncivra token deployed?</summary>
                 <p>
-                  No Kintrava token mint is configured. KNTV is a preview label
+                  No Oncivra token mint is configured. OCVR is a preview label
                   only; the community program does not create or distribute a
                   token. A mint's name, symbol, decimals, and address will be
                   shown after they are provided and verified.
                 </p>
               </details>
               <details>
-                <summary>Is Kintrava an official Solana product?</summary>
+                <summary>Is Oncivra an official Solana product?</summary>
                 <p>
-                  No. Kintrava is an independent community project currently
+                  No. Oncivra is an independent community project currently
                   configured for {{ SOLANA_NETWORK_NAME }}. It is not affiliated
                   with the Solana Foundation.
                 </p>
@@ -1647,7 +1613,7 @@ async function setQuest(q) {
         </section>
       </main>
             <footer>
-        <span>© 2026 Kintrava <span class="footer-separator">·</span> Move together on-chain.</span>
+        <span>© 2026 Oncivra <span class="footer-separator">·</span> Coordinate clearly on-chain.</span>
         <span>Independent community project <span class="footer-dot"></span> {{ SOLANA_NETWORK_NAME }}</span>
       </footer>
     </div>

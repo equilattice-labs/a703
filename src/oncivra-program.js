@@ -1,5 +1,5 @@
 import { AnchorProvider, BN, Program, web3 } from '@coral-xyz/anchor'
-import idl from './idl/kintrava.json' with { type: 'json' }
+import idl from './idl/kivoraft.json' with { type: 'json' }
 
 const encoder = new TextEncoder()
 const seed = value => encoder.encode(value)
