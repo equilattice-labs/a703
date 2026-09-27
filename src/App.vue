@@ -1,15 +1,15 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, nextTick, watch } from "vue";
-import { useSolkintra } from "./useSolkintra";
+import { useKintrava } from "./useKintrava";
 import {
   SOLANA_CLUSTER,
   SOLANA_NETWORK_NAME,
   TOKEN_MINT_ADDRESS,
 } from "./solana.js";
-import solkintraMark from "./assets/solkintra-mark.svg";
+import kintravaMark from "./assets/kintrava-mark.svg";
 import Icon from "./Icon.vue";
 
-const solkintra = useSolkintra();
+const kintrava = useKintrava();
 const {
   configured,
   mintConfigured,
@@ -64,7 +64,7 @@ const {
   questStatus,
   proposalStatus,
   votePercent,
-} = solkintra;
+} = kintrava;
 const mobileMenu = ref(false);
 const validTabs = [
   "home",
@@ -124,7 +124,7 @@ const samples = [
   {
     id: "sample-1",
     sample: true,
-    title: "Read the Solkintra charter",
+    title: "Read the Kintrava charter",
     reward: 12n * 10n ** 9n,
     detail: "A sample welcome quest. Learn how rewards and stewardship work.",
   },
@@ -160,7 +160,7 @@ const clearedDraft = ref(null);
 watch(proposalText, (text) => {
   if (text) clearedDraft.value = null;
 });
-const draftKey = "solkintra-proposal-draft";
+const draftKey = "kintrava-proposal-draft";
 try {
   // Migrate unfinished drafts from previous application brands once.
   const legacyDraftKeys = [
@@ -383,11 +383,11 @@ async function setQuest(q) {
       >Skip to content</a
     >
     <header class="site-header" @keydown.esc="closeMenu">
-      <button class="brand" aria-label="Solkintra home" @click="go('home')">
-        <img :src="solkintraMark" width="34" height="34" alt="" />
+      <button class="brand" aria-label="Kintrava home" @click="go('home')">
+        <img :src="kintravaMark" width="34" height="34" alt="" />
         <span
-          >solkintra<span class="brand-caption"
-            >SOLANA COMMUNITY TERMINAL</span
+          >kintrava<span class="brand-caption"
+            >SOLANA COMMUNITY COORDINATION</span
           ></span
         >
       </button>
@@ -522,7 +522,7 @@ async function setQuest(q) {
               <div class="hero-intro">
                 <span class="intro-rule" aria-hidden="true"></span>
                 <p>
-                  Quests, proposals, and treasury reads in one Solana workspace.<br />Trace the next route from wallet connect to public proof.<!--
+                  Quests, proposals, and treasury reads in one Solana workspace.<br /> Trace the next route from wallet connect to public proof.<!--
                   -->
                 </p>
               </div>
@@ -703,7 +703,7 @@ async function setQuest(q) {
           >
             <div class="route-intro">
               <span class="eyebrow">KEEP THINGS MOVING</span>
-              <h2>There is more<br />than one way in.</h2>
+              <h2>There is more<br /> than one way in.</h2>
             </div>
             <button class="route-item" @click="go('stake')">
               <span class="route-top"
@@ -939,7 +939,7 @@ async function setQuest(q) {
                     v-model="adminTitle"
                     maxlength="80"
                     required
-                    placeholder="Welcome to Solkintra" /></label
+                    placeholder="Welcome to Kintrava" /></label
                 ><label>Quest details<textarea
                     v-model="adminDetails"
                     maxlength="240"
@@ -1195,7 +1195,7 @@ async function setQuest(q) {
                   {{
                     readError
                       ? "Use Try again above to reconnect."
-                      : "Start the first Solkintra proposal with a clear idea and a voting period."
+                      : "Start the first Kintrava proposal with a clear idea and a voting period."
                   }}
                 </p>
                 <button
@@ -1412,8 +1412,8 @@ async function setQuest(q) {
                   </div>
                 </dl>
                 <p class="fine-print">
-                  Solkintra is the app brand.
-                  {{ mintConfigured ? `Decimals are read from the mint (${tokenDecimals}); display name and ticker metadata are pending.` : "No token mint is deployed or configured. SKTR is only a preview label." }}
+                  Kintrava is the app brand.
+                  {{ mintConfigured ? `Decimals are read from the mint (${tokenDecimals}); display name and ticker metadata are pending.` : "No token mint is deployed or configured. KNTV is only a preview label." }}
                 </p>
               </article>
             </div>
@@ -1461,7 +1461,7 @@ async function setQuest(q) {
         <section v-if="tab === 'learn'" class="page learn">
           <div class="page-head">
             <div>
-              <span class="eyebrow">THE SOLKINTRA FIELD GUIDE</span>
+              <span class="eyebrow">THE KINTRAVA FIELD GUIDE</span>
               <h1>A way in.<br /><em>A way forward.</em></h1>
               <p>
                 A few things to know before your first contribution. Follow the
@@ -1590,9 +1590,9 @@ async function setQuest(q) {
               <details open>
                 <summary>What does a wallet confirmation do?</summary>
                 <p>
-                  Quest participation, proposal creation, and voting use
-                  Solana transactions when the program is deployed and
-                  initialized. The wallet shows each instruction before signing.
+                  Quest participation, proposal creation, and advisory voting
+                  use the initialized Testnet community program. The wallet
+                  shows each instruction before signing.
                 </p>
               </details>
               <details>
@@ -1605,27 +1605,27 @@ async function setQuest(q) {
               </details>
               <details>
                 <summary>
-                  Why is the token name different from Solkintra?
+                  Why is the token name different from Kintrava?
                 </summary>
                 <p>
                   The future mint will define the token name, symbol and decimals.
-                  Solkintra is the application brand, while SKTR is only a preview
+                  Kintrava is the application brand, while KNTV is only a preview
                   label today. Current token details: {{ tokenIdentity }}.
                 </p>
               </details>
               <details>
-                <summary>Is a Solkintra token deployed?</summary>
+                <summary>Is a Kintrava token deployed?</summary>
                 <p>
-                  No Solkintra token mint is configured. SKTR is a preview label
+                  No Kintrava token mint is configured. KNTV is a preview label
                   only; the community program does not create or distribute a
                   token. A mint's name, symbol, decimals, and address will be
                   shown after they are provided and verified.
                 </p>
               </details>
               <details>
-                <summary>Is Solkintra an official Solana product?</summary>
+                <summary>Is Kintrava an official Solana product?</summary>
                 <p>
-                  No. Solkintra is an independent community project currently
+                  No. Kintrava is an independent community project currently
                   configured for {{ SOLANA_NETWORK_NAME }}. It is not affiliated
                   with the Solana Foundation.
                 </p>
@@ -1647,7 +1647,7 @@ async function setQuest(q) {
         </section>
       </main>
             <footer>
-        <span>© 2026 Solkintra <span class="footer-separator">·</span> Find your route on-chain.</span>
+        <span>© 2026 Kintrava <span class="footer-separator">·</span> Move together on-chain.</span>
         <span>Independent community project <span class="footer-dot"></span> {{ SOLANA_NETWORK_NAME }}</span>
       </footer>
     </div>

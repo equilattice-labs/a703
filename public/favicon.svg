@@ -1,9 +1,15 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
-  <title>Solkintra - shared progress</title>
+  <title>Kintrava - Wayfinder mascot</title>
+  <desc>A lively route mascot with a coral face, cyan tail, and lime chain node.</desc>
   <rect width="128" height="128" rx="12" fill="#e9f4ff"/>
-  <g fill="#b8f36b" transform="translate(10.24 10.24) scale(.84)">
-    <polygon points="14,66 38,42 38,90 14,114"/>
-    <polygon points="52,50 76,26 76,74 52,98"/>
-    <polygon points="90,34 114,10 114,58 90,82"/>
+  <g transform="translate(10.24 10.24) scale(.84)" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M70 70 C87 75 99 69 98 57 C97 49 91 46 84 51 C96 37 112 40 113 53 C115 71 97 88 75 87" fill="none" stroke="#42d6ff" stroke-width="10"/>
+    <circle cx="104" cy="49" r="5" fill="#b8f36b"/>
+    <path d="M30 42 L24 17 L44 28 C51 24 61 24 68 29 L85 14 L78 42 C86 48 90 57 88 66 C86 78 74 86 58 86 C41 86 29 75 29 60 C29 53 29 47 30 42 Z" fill="#ff7a59"/>
+    <circle cx="40.5" cy="46.5" r="6.5" fill="#071019"/>
+    <circle cx="68.5" cy="46.5" r="6.5" fill="#071019"/>
+    <circle cx="40.5" cy="44.5" r="2" fill="#e9f4ff"/>
+    <circle cx="68.5" cy="44.5" r="2" fill="#e9f4ff"/>
+    <path d="M43 61 Q55 48 69 59 Q59 60 51 68 Q60 72 68 77" fill="none" stroke="#071019" stroke-width="4"/>
   </g>
 </svg>
