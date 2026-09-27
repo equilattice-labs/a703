@@ -13,7 +13,7 @@ import { supportsSolanaCluster } from './wallet-networks.js'
 import {
   asAnchorU64, claimPda, communityPda, createProgramClient,
   fetchCommunity, proposalPda, questPda, votePda,
-} from './oncivra-program.js'
+} from './solvyrra-program.js'
 
 const rpcRequest = async (method, params = []) => {
   if (SOLANA_CONFIG_ERROR) throw new Error(SOLANA_CONFIG_ERROR)
@@ -47,14 +47,14 @@ const supportedCluster = value => {
   return normalized === 'mainnet' ? 'mainnet-beta' : normalized
 }
 
-export function useOncivra() {
+export function useSolvyrra() {
   // Token reads and program actions are independent. Quest/vote actions use
   // the Anchor interface; staking remains unavailable until a mint is supplied.
   const mintConfigured = Boolean(TOKEN_MINT_ADDRESS)
   const configured = Boolean(PROGRAM_ID)
   const programReady = ref(false)
-  const tokenName = ref(TOKEN_NAME || (mintConfigured ? '' : 'Oncivra preview token'))
-  const tokenSymbol = ref(TOKEN_SYMBOL || (mintConfigured ? 'SPL' : 'OCVR'))
+  const tokenName = ref(TOKEN_NAME || (mintConfigured ? '' : 'Solvyrra preview token'))
+  const tokenSymbol = ref(TOKEN_SYMBOL || (mintConfigured ? 'SPL' : 'SVYR'))
   const tokenDecimals = ref(TOKEN_DECIMALS)
   const tokenDecimalsKnown = ref(false)
   let injected, walletEpoch = 0, refreshPromise, timer
@@ -110,7 +110,7 @@ export function useOncivra() {
           ? SOLANA_CLUSTER
           : 'testnet'
       metamaskClient = await createSolanaClient({
-        dapp: { name: 'Oncivra', url: window.location.origin },
+        dapp: { name: 'Solvyrra', url: window.location.origin },
         api: { supportedNetworks: { [metamaskNetwork]: SOLANA_RPC_URL } },
         analytics: { enabled: false },
       })

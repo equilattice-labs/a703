@@ -1,15 +1,15 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, nextTick, watch } from "vue";
-import { useOncivra } from "./useOncivra";
+import { useSolvyrra } from "./useSolvyrra";
 import {
   SOLANA_CLUSTER,
   SOLANA_NETWORK_NAME,
   TOKEN_MINT_ADDRESS,
 } from "./solana.js";
-import oncivraMark from "./assets/oncivra-mark.svg";
+import solvyrraMark from "./assets/solvyrra-mark.svg";
 import Icon from "./Icon.vue";
 
-const oncivra = useOncivra();
+const solvyrra = useSolvyrra();
 const {
   configured,
   mintConfigured,
@@ -64,7 +64,7 @@ const {
   questStatus,
   proposalStatus,
   votePercent,
-} = oncivra;
+} = solvyrra;
 const mobileMenu = ref(false);
 const validTabs = [
   "home",
@@ -124,7 +124,7 @@ const samples = [
   {
     id: "sample-1",
     sample: true,
-    title: "Read the Oncivra charter",
+    title: "Read the Solvyrra charter",
     reward: 12n * 10n ** 9n,
     detail: "A sample welcome quest. Learn how rewards and stewardship work.",
   },
@@ -160,10 +160,11 @@ const clearedDraft = ref(null);
 watch(proposalText, (text) => {
   if (text) clearedDraft.value = null;
 });
-const draftKey = "oncivra-proposal-draft";
+const draftKey = "solvyrra-proposal-draft";
 try {
   // Migrate unfinished drafts from previous application brands once.
   const legacyDraftKeys = [
+    "oncivra-proposal-draft",
     "pactelora-proposal-draft",
     "solkintra-proposal-draft",
     "quorivana-proposal-draft",
@@ -383,10 +384,10 @@ async function setQuest(q) {
       >Skip to content</a
     >
     <header class="site-header" @keydown.esc="closeMenu">
-      <button class="brand" aria-label="Oncivra home" @click="go('home')">
-        <img :src="oncivraMark" width="34" height="34" alt="" />
+      <button class="brand" aria-label="Solvyrra home" @click="go('home')">
+        <img :src="solvyrraMark" width="34" height="34" alt="" />
         <span
-          >oncivra<span class="brand-caption"
+          >solvyrra<span class="brand-caption"
             >SOLANA COMMUNITY COORDINATION</span
           ></span
         >
@@ -518,11 +519,11 @@ async function setQuest(q) {
           </div>
           <div class="home-hero">
             <div class="hero-copy">
-              <h1>Community<br /><em>dashboard.</em></h1>
+              <h1>Wallet<br /><em>cockpit.</em></h1>
               <div class="hero-intro">
                 <span class="intro-rule" aria-hidden="true"></span>
                 <p>
-                  Your wallet, active quests, and community proposals on Solana in one view.<!--
+                  Track SOL, token status, quests, and proposals on Solana in one view.<!--
                   -->
                 </p>
               </div>
@@ -544,19 +545,19 @@ async function setQuest(q) {
               </div>
               <div class="portfolio-total">
                 <span>AVAILABLE BALANCE</span>
-                <strong>{{ connected && accountReady ? solUnits(native, 4) : "—" }} <small>SOL</small></strong>
+                <strong>{{ connected && accountReady ? solUnits(native, 4) : "--" }} <small>SOL</small></strong>
                 <span>Native balance on {{ SOLANA_NETWORK_NAME }}</span>
               </div>
               <div class="portfolio-assets">
                 <div class="portfolio-asset">
-                  <span class="asset-symbol sol">◎</span>
+                  <span class="asset-symbol sol">S</span>
                   <span><strong>Solana</strong><small>Native asset</small></span>
                   <b>{{ connected && accountReady ? `${solUnits(native, 4)} SOL` : "Connect wallet" }}</b>
                 </div>
                 <div class="portfolio-asset">
                   <span class="asset-symbol token">O</span>
                   <span><strong>{{ mintConfigured ? tokenSymbol : "Community token" }}</strong><small>{{ mintConfigured ? tokenName || "SPL token" : "No mint configured" }}</small></span>
-                  <b>{{ mintConfigured && connected && accountReady ? `${units(token)} ${tokenSymbol}` : "—" }}</b>
+                  <b>{{ mintConfigured && connected && accountReady ? `${units(token)} ${tokenSymbol}` : "--" }}</b>
                 </div>
               </div>
               <div class="portfolio-footer">
@@ -575,7 +576,7 @@ async function setQuest(q) {
                   metricsAvailable
                     ? "Live from Solana"
                     : mintConfigured
-                      ? "Mint read-only · program pending"
+                      ? "Mint read-only / program pending"
                       : "Preview - sample workspace"
                 }}
               </p>
@@ -840,7 +841,7 @@ async function setQuest(q) {
                 </div>
                 <div class="quest-action">
                   <div class="quest-reward">
-                    <span>{{ q.sample ? "Reward · example" : "Reward" }}</span>
+                    <span>{{ q.sample ? "Reward / example" : "Reward" }}</span>
                     <strong v-if="q.sample">{{ units(q.reward) }} <small>{{ tokenSymbol }}</small></strong>
                     <strong v-else>No token reward</strong>
                   </div>
@@ -905,7 +906,7 @@ async function setQuest(q) {
                     v-model="adminTitle"
                     maxlength="80"
                     required
-                    placeholder="Welcome to Oncivra" /></label
+                    placeholder="Welcome to Solvyrra" /></label
                 ><label>Quest details<textarea
                     v-model="adminDetails"
                     maxlength="240"
@@ -1161,7 +1162,7 @@ async function setQuest(q) {
                   {{
                     readError
                       ? "Use Try again above to reconnect."
-                      : "Start the first Oncivra proposal with a clear idea and a voting period."
+                      : "Start the first Solvyrra proposal with a clear idea and a voting period."
                   }}
                 </p>
                 <button
@@ -1195,7 +1196,7 @@ async function setQuest(q) {
                     <p>
                       <Icon name="clock" :size="15" />{{
                         p.sample
-                          ? "Example only · no live votes"
+                          ? "Example only / no live votes"
                           : "Voting ends " + date(p.endsAt)
                       }}
                     </p>
@@ -1285,14 +1286,14 @@ async function setQuest(q) {
                   ><Icon name="treasury" :size="24" />
                 </div>
                 <strong
-                >{{ ready && treasuryTokenKnown ? units(treasuryBalance) : "—"
+                >{{ ready && treasuryTokenKnown ? units(treasuryBalance) : "--"
                   }}<small>{{ tokenSymbol }}</small></strong
                 ><span>{{ tokenIdentity }}</span>
                 <div class="treasury-gas">
                   <Icon name="wallet" :size="19" /><span
                     >Treasury gas balance</span
                   ><strong
-                    >{{ ready && treasuryNativeKnown ? solUnits(treasuryNative, 6) : "—"
+                    >{{ ready && treasuryNativeKnown ? solUnits(treasuryNative, 6) : "--"
                     }}<small>{{ SOLANA_CLUSTER === "devnet" ? "Devnet SOL" : SOLANA_CLUSTER === "testnet" ? "Testnet SOL" : "SOL" }}</small></strong
                   >
                 </div>
@@ -1319,7 +1320,7 @@ async function setQuest(q) {
                   </div>
                   <div>
                     <dt>Total issued {{ tokenSymbol }}</dt>
-                    <dd>{{ mintConfigured && ready ? units(totalSupply) : "—" }}</dd>
+                    <dd>{{ mintConfigured && ready ? units(totalSupply) : "--" }}</dd>
                   </div>
                   <div>
                     <dt>Token staking</dt>
@@ -1378,8 +1379,8 @@ async function setQuest(q) {
                   </div>
                 </dl>
                 <p class="fine-print">
-                  Oncivra is the app brand.
-                  {{ mintConfigured ? `Decimals are read from the mint (${tokenDecimals}); display name and ticker metadata are pending.` : "No token mint is deployed or configured. OCVR is only a preview label." }}
+                  Solvyrra is the app brand.
+                  {{ mintConfigured ? `Decimals are read from the mint (${tokenDecimals}); display name and ticker metadata are pending.` : "No token mint is deployed or configured. SVYR is only a preview label." }}
                 </p>
               </article>
             </div>
@@ -1427,7 +1428,7 @@ async function setQuest(q) {
         <section v-if="tab === 'learn'" class="page learn">
           <div class="page-head">
             <div>
-              <span class="eyebrow">THE ONCIVRA FIELD GUIDE</span>
+              <span class="eyebrow">THE SOLVYRRA FIELD GUIDE</span>
               <h1>A way in.<br /><em>A way forward.</em></h1>
               <p>
                 A few things to know before your first contribution. Follow the
@@ -1571,27 +1572,27 @@ async function setQuest(q) {
               </details>
               <details>
                 <summary>
-                  Why is the token name different from Oncivra?
+                  Why is the token name different from Solvyrra?
                 </summary>
                 <p>
                   The future mint will define the token name, symbol and decimals.
-                  Oncivra is the application brand, while OCVR is only a preview
+                  Solvyrra is the application brand, while SVYR is only a preview
                   label today. Current token details: {{ tokenIdentity }}.
                 </p>
               </details>
               <details>
-                <summary>Is an Oncivra token deployed?</summary>
+                <summary>Is a Solvyrra token deployed?</summary>
                 <p>
-                  No Oncivra token mint is configured. OCVR is a preview label
+                  No Solvyrra token mint is configured. SVYR is a preview label
                   only; the community program does not create or distribute a
                   token. A mint's name, symbol, decimals, and address will be
                   shown after they are provided and verified.
                 </p>
               </details>
               <details>
-                <summary>Is Oncivra an official Solana product?</summary>
+                <summary>Is Solvyrra an official Solana product?</summary>
                 <p>
-                  No. Oncivra is an independent community project currently
+                  No. Solvyrra is an independent community project currently
                   configured for {{ SOLANA_NETWORK_NAME }}. It is not affiliated
                   with the Solana Foundation.
                 </p>
@@ -1613,7 +1614,7 @@ async function setQuest(q) {
         </section>
       </main>
             <footer>
-        <span>© 2026 Oncivra <span class="footer-separator">·</span> Coordinate clearly on-chain.</span>
+        <span>2026 Solvyrra <span class="footer-separator">/</span> Route value on-chain.</span>
         <span>Independent community project <span class="footer-dot"></span> {{ SOLANA_NETWORK_NAME }}</span>
       </footer>
     </div>

@@ -7,10 +7,10 @@ import {
   communityPda,
   createProgramClient,
   questPda,
-} from '../src/oncivra-program.js'
+} from '../src/solvyrra-program.js'
 import { supportsSolanaCluster } from '../src/wallet-networks.js'
 
-const moduleUrl = new URL('../src/useOncivra.js', import.meta.url)
+const moduleUrl = new URL('../src/useSolvyrra.js', import.meta.url)
 const solanaConfigUrl = new URL('../src/solana.js', import.meta.url)
 
 test('discovers and validates Wallet Standard accounts on MetaMask Solana CAIP networks', () => {
@@ -52,8 +52,8 @@ test('defaults to the deployed Testnet program and never reuses it on mainnet', 
   const defaultNetwork = runScenario(`
     globalThis.window = {}
     const config = await import(${JSON.stringify(solanaConfigUrl.href)})
-    const { useOncivra } = await import(${JSON.stringify(moduleUrl.href)})
-    const app = useOncivra()
+    const { useSolvyrra } = await import(${JSON.stringify(moduleUrl.href)})
+    const app = useSolvyrra()
     console.log(JSON.stringify({
       cluster: config.SOLANA_CLUSTER,
       rpc: config.SOLANA_RPC_URL,
@@ -80,7 +80,7 @@ test('defaults to the deployed Testnet program and never reuses it on mainnet', 
 
 function runScenario(source, config = {}) {
   const script = `
-    globalThis.__ONCIVRA_ENV__ = ${JSON.stringify(config)}
+    globalThis.__SOLVYRRA_ENV__ = ${JSON.stringify(config)}
     globalThis.__rpcCalls = []
     globalThis.__rpcImpl = async (method) => {
       if (method === 'getVersion') return { result: { solanaCore: '1.18.0' } }
@@ -109,11 +109,11 @@ function runScenario(source, config = {}) {
 test('keeps a mint-less app in sample preview mode and never enables writes', () => {
   const result = runScenario(`
     globalThis.window = {}
-    const { useOncivra } = await import(${JSON.stringify(moduleUrl.href)})
-    const app = useOncivra()
+    const { useSolvyrra } = await import(${JSON.stringify(moduleUrl.href)})
+    const app = useSolvyrra()
     console.log(JSON.stringify({ configured: app.configured, programReady: app.programReady.value, canWrite: app.canWrite.value, symbol: app.tokenSymbol.value, decimals: app.tokenDecimals.value }))
   `)
-  assert.deepEqual(result, { configured: true, programReady: false, canWrite: false, symbol: 'OCVR', decimals: 9 })
+  assert.deepEqual(result, { configured: true, programReady: false, canWrite: false, symbol: 'SVYR', decimals: 9 })
 })
 
 test('reads native SOL without requiring a deployed token mint', () => {
@@ -124,8 +124,8 @@ test('reads native SOL without requiring a deployed token mint', () => {
       if (method === 'getBalance') return { result: { value: '1250000000' } }
       return { result: {} }
     }
-    const { useOncivra } = await import(${JSON.stringify(moduleUrl.href)})
-    const app = useOncivra()
+    const { useSolvyrra } = await import(${JSON.stringify(moduleUrl.href)})
+    const app = useSolvyrra()
     app.wallet.value = 'Wallet111111111111111111111111111111111111'
     const refreshed = await app.refresh()
     console.log(JSON.stringify({
@@ -162,8 +162,8 @@ test('reads mint decimals and treasury SPL balances; displays wallet and treasur
       }
       return { result: {} }
     }
-    const { useOncivra } = await import(${JSON.stringify(moduleUrl.href)})
-    const app = useOncivra()
+    const { useSolvyrra } = await import(${JSON.stringify(moduleUrl.href)})
+    const app = useSolvyrra()
     app.wallet.value = 'Wallet111111111111111111111111111111111111'
     await app.refresh()
     console.log(JSON.stringify({
@@ -214,8 +214,8 @@ test('does not present treasury token balance as zero when the SPL balance read 
       if (method === 'getBalance') return { result: { value: 5000000000 } }
       if (method === 'getTokenAccountsByOwner') return { error: { message: 'token account query failed' } }
     }
-    const { useOncivra } = await import(${JSON.stringify(moduleUrl.href)})
-    const app = useOncivra()
+    const { useSolvyrra } = await import(${JSON.stringify(moduleUrl.href)})
+    const app = useSolvyrra()
     await app.refresh()
     console.log(JSON.stringify({ ready: app.ready.value, known: app.treasuryKnown.value, tokenKnown: app.treasuryTokenKnown.value, nativeKnown: app.treasuryNativeKnown.value, token: String(app.treasuryBalance.value), error: app.treasuryError.value }))
   `, {
@@ -228,8 +228,8 @@ test('does not present treasury token balance as zero when the SPL balance read 
 test('rejects a detectable Phantom cluster mismatch and leaves the wallet disconnected', () => {
   const result = runScenario(`
     globalThis.window = { phantom: { solana: { cluster: 'mainnet-beta', connect: async () => ({ publicKey: 'Wallet111111111111111111111111111111111111' }) } } }
-    const { useOncivra } = await import(${JSON.stringify(moduleUrl.href)})
-    const app = useOncivra()
+    const { useSolvyrra } = await import(${JSON.stringify(moduleUrl.href)})
+    const app = useSolvyrra()
     const connected = await app.connect()
     console.log(JSON.stringify({ connected, wallet: app.wallet.value, message: app.txState.value.message }))
   `, { VITE_SOLANA_TOKEN_MINT: 'Mint111111111111111111111111111111111111111' })
@@ -241,7 +241,7 @@ test('rejects a detectable Phantom cluster mismatch and leaves the wallet discon
 test('disconnect and account changes clear stale balances and guard late RPC responses', () => {
   const result = runScenario(`
     const { createRenderer, h } = await import('vue')
-    const { useOncivra } = await import(${JSON.stringify(moduleUrl.href)})
+    const { useSolvyrra } = await import(${JSON.stringify(moduleUrl.href)})
     const listeners = new Map()
     let activeKey = 'Wallet111111111111111111111111111111111111'
     const provider = {
@@ -265,7 +265,7 @@ test('disconnect and account changes clear stale balances and guard late RPC res
       remove: node => { const siblings = node.parent?.children || []; const index = siblings.indexOf(node); if (index >= 0) siblings.splice(index, 1); node.parent = null }
     })
     const root = { type: 'root', children: [], parent: null }
-    const vueApp = renderer.createApp({ setup() { app = useOncivra(); return () => h('div') } })
+    const vueApp = renderer.createApp({ setup() { app = useSolvyrra(); return () => h('div') } })
     vueApp.mount(root)
     await app.refresh()
     await app.connect()
@@ -313,8 +313,8 @@ test('disconnect and account changes clear stale balances and guard late RPC res
 test('keeps custom RPC endpoints labeled custom and omits a guessed explorer cluster', () => {
   const result = runScenario(`
     globalThis.window = {}
-    const { useOncivra } = await import(${JSON.stringify(moduleUrl.href)})
-    const app = useOncivra()
+    const { useSolvyrra } = await import(${JSON.stringify(moduleUrl.href)})
+    const app = useSolvyrra()
     console.log(JSON.stringify({ cluster: app.solanaCluster, name: app.solanaNetworkName, link: app.explorer('address', 'SomePublicKey') }))
   `, {
     VITE_SOLANA_TOKEN_MINT: 'Mint111111111111111111111111111111111111111',
@@ -327,8 +327,8 @@ test('surfaces RPC failures and clears readiness', () => {
   const result = runScenario(`
     globalThis.window = {}
     globalThis.__rpcImpl = async () => ({ httpStatus: 503 })
-    const { useOncivra } = await import(${JSON.stringify(moduleUrl.href)})
-    const app = useOncivra()
+    const { useSolvyrra } = await import(${JSON.stringify(moduleUrl.href)})
+    const app = useSolvyrra()
     const refreshed = await app.refresh()
     console.log(JSON.stringify({ refreshed, ready: app.ready.value, error: app.readError.value }))
   `, { VITE_SOLANA_TOKEN_MINT: 'Mint111111111111111111111111111111111111111' })
