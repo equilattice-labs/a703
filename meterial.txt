@@ -1,25 +1,38 @@
-Solvyrra / solvyrra / SVYR (provisional preview label, not an issued symbol)
-Make the next move verifiable.
-Meaning: a practical route from a proposed action to verifiable on-chain proof.
-Preferred domain candidate: solvyrra.xyz; alternatives: solvyrra.fun / solvyrra.top.
-X candidate: @solvyrra. Availability evidence: output/branding/solvyrra/research.md.
-No domain or social account was registered, acquired, reserved, or published by this update.
+SOLSTIR / IDENTITY AND WEBSITE REFERENCE
 
-Visual direction: a light, dense Solana wallet cockpit with a graphite navigation rail,
-cobalt network actions, emerald confirmations, amber warnings, and compact ledger rows.
-Experience: overview, sample quests, token status, advisory governance, read-only treasury,
-and a three-step participation guide. Token locking and rewards are disabled until a mint,
-custody rules, and funding are supplied.
-Routes: #home / #quests / #stake / #governance / #treasury / #learn.
-Mobile: condensed top bar, expandable navigation, no horizontal overflow.
+Name: Solstir
+Meaning: Solana + stir, a place for community activity around on-chain work.
+Tagline: On-chain, together.
+Slug: solstir
+Preferred domain candidate: solstir.fun
+Other domain candidates: solstir.xyz / solstir.top
+X handle candidate: @solstirapp
 
-Network: Solana Testnet (`solana:testnet`).
+Identity check: read-only RDAP and public X profile checks dated 2026-09-28.
+No domain or social account was registered or acquired. See
+`output/branding/solstir/research.md` for endpoints and limits.
+
+PRODUCT
+Solstir is an independent Solana community application with a crypto-terminal
+interface. It supports overview, quests, token status, advisory governance,
+treasury reads, and a participation guide. Routes remain #home / #quests /
+#stake / #governance / #treasury / #learn.
+
+The Anchor community program records quest participation and advisory votes.
+It does not mint or distribute tokens, implement token locks, or execute
+treasury spending. No token mint or token symbol is configured.
+
+NETWORK
+Default: Solana Testnet (`solana:testnet`)
 RPC: https://api.testnet.solana.com
 Explorer: https://explorer.solana.com/?cluster=testnet
-No token mint has been supplied. SVYR is a temporary UI label only. A provided mint can
-enable read-only supply and SPL balance reads; it does not enable token actions.
-The Anchor community program records quest participation and advisory votes only.
-The program address and account interface remain unchanged. The deployed Anchor module
-keeps the technical name `kivoraft` for compatibility; Solvyrra is the display brand.
+Program address and account interface are preserved. The deployed Anchor
+module name `kivoraft` is a technical compatibility identifier.
 
-The old Solidity project remains under `contracts/` as historical EVM material.
+VISUAL
+Dark graphite terminal surfaces with acid green, violet, and orange status
+accents. The eight-ray signal mark and route badges are used across the app
+and launch materials.
+Twitter launch material consists of one brand post and two conditional
+post-CA build posts. CA placeholders refer only to a future verified SPL mint,
+never to the existing program address.

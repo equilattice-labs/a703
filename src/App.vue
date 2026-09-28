@@ -1,15 +1,15 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, nextTick, watch } from "vue";
-import { useSolvyrra } from "./useSolvyrra";
+import { useCommunityApp } from "./useCommunityApp";
 import {
   SOLANA_CLUSTER,
   SOLANA_NETWORK_NAME,
   TOKEN_MINT_ADDRESS,
 } from "./solana.js";
-import solvyrraMark from "./assets/solvyrra-mark.svg";
+import brandMark from "./assets/solstir-mark.svg";
 import Icon from "./Icon.vue";
 
-const solvyrra = useSolvyrra();
+const communityApp = useCommunityApp();
 const {
   configured,
   mintConfigured,
@@ -64,7 +64,7 @@ const {
   questStatus,
   proposalStatus,
   votePercent,
-} = solvyrra;
+} = communityApp;
 const mobileMenu = ref(false);
 const validTabs = [
   "home",
@@ -124,7 +124,7 @@ const samples = [
   {
     id: "sample-1",
     sample: true,
-    title: "Read the Solvyrra charter",
+    title: "Read the community charter",
     reward: 12n * 10n ** 9n,
     detail: "A sample welcome quest. Learn how rewards and stewardship work.",
   },
@@ -160,10 +160,11 @@ const clearedDraft = ref(null);
 watch(proposalText, (text) => {
   if (text) clearedDraft.value = null;
 });
-const draftKey = "solvyrra-proposal-draft";
+const draftKey = "solstir-proposal-draft";
 try {
   // Migrate unfinished drafts from previous application brands once.
   const legacyDraftKeys = [
+    "solvyrra-proposal-draft",
     "oncivra-proposal-draft",
     "pactelora-proposal-draft",
     "solkintra-proposal-draft",
@@ -294,8 +295,7 @@ const actionDisabled = computed(
         (connected.value && (!accountReady.value || accountReading.value)))),
 );
 const tokenIdentity = computed(() => {
-  if (!mintConfigured)
-    return `${tokenName.value || "Sample token"} (${tokenSymbol.value}) - sample`;
+  if (!mintConfigured) return "No token mint configured";
   if (tokenName.value) return `${tokenName.value} (${tokenSymbol.value})`;
   return reading.value
     ? "Loading mint data..."
@@ -384,11 +384,11 @@ async function setQuest(q) {
       >Skip to content</a
     >
     <header class="site-header" @keydown.esc="closeMenu">
-      <button class="brand" aria-label="Solvyrra home" @click="go('home')">
-        <img :src="solvyrraMark" width="34" height="34" alt="" />
+      <button class="brand" aria-label="Solstir home" @click="go('home')">
+        <img :src="brandMark" width="34" height="34" alt="" />
         <span
-          >solvyrra<span class="brand-caption"
-            >SOLANA COMMUNITY COORDINATION</span
+          >solstir<span class="brand-caption"
+            >SOLANA COMMUNITY TERMINAL</span
           ></span
         >
       </button>
@@ -519,11 +519,11 @@ async function setQuest(q) {
           </div>
           <div class="home-hero">
             <div class="hero-copy">
-              <h1>Wallet<br /><em>cockpit.</em></h1>
+              <h1>Protocol<br /><em>overview.</em></h1>
               <div class="hero-intro">
                 <span class="intro-rule" aria-hidden="true"></span>
                 <p>
-                  Track SOL, token status, quests, and proposals on Solana in one view.<!--
+                  Follow SOL balances, community quests, and proposals on Solana.<!--
                   -->
                 </p>
               </div>
@@ -555,8 +555,8 @@ async function setQuest(q) {
                   <b>{{ connected && accountReady ? `${solUnits(native, 4)} SOL` : "Connect wallet" }}</b>
                 </div>
                 <div class="portfolio-asset">
-                  <span class="asset-symbol token">O</span>
-                  <span><strong>{{ mintConfigured ? tokenSymbol : "Community token" }}</strong><small>{{ mintConfigured ? tokenName || "SPL token" : "No mint configured" }}</small></span>
+                  <span class="asset-symbol token"><Icon name="stake" :size="16" /></span>
+                  <span><strong>{{ mintConfigured ? tokenSymbol : "Token mint" }}</strong><small>{{ mintConfigured ? tokenName || "SPL token" : "Not configured" }}</small></span>
                   <b>{{ mintConfigured && connected && accountReady ? `${units(token)} ${tokenSymbol}` : "--" }}</b>
                 </div>
               </div>
@@ -569,7 +569,7 @@ async function setQuest(q) {
           </div>
           <section class="community-strip" aria-label="Community statistics">
             <div class="strip-intro">
-              <span class="eyebrow">MARKET PULSE</span>
+              <span class="eyebrow">NETWORK ACTIVITY</span>
               <p>
                 <span class="status-dot"></span
                 >{{
@@ -601,8 +601,8 @@ async function setQuest(q) {
             <section class="opportunity-panel">
               <div class="section-heading">
                 <div>
-                  <span class="eyebrow">01 / START SOMEWHERE</span>
-                  <h2>Pick up a little purpose.</h2>
+                  <span class="eyebrow">COMMUNITY ACTIVITY</span>
+                  <h2>Available quests.</h2>
                 </div>
                 <button class="text-button" @click="go('quests')">
                   All quests <Icon :size="17" />
@@ -625,7 +625,7 @@ async function setQuest(q) {
                     ><strong>{{ q.title }}</strong></span
                   >
                   <span class="row-reward"
-                    >{{ q.sample ? `${units(q.reward)} ${tokenSymbol}` : "Participation only" }}</span
+                  >{{ q.sample ? "Sample only" : "Participation only" }}</span
                   ><Icon name="external" :size="21" />
                 </button>
                 <div v-if="!featuredQuests.length" class="empty compact">
@@ -653,14 +653,13 @@ async function setQuest(q) {
               </div>
             </section>
             <aside class="next-step-card">
-              <span class="eyebrow">MAKE YOURSELF AT HOME</span>
-              <h2>New here?<br /><em>Start with why.</em></h2>
+              <span class="eyebrow">GETTING STARTED</span>
+              <h2>New to<br /><em>Testnet?</em></h2>
               <p>
-                Understand the tools, meet the possibilities, and find your own
-                way to take part.
+                Wallet setup, network selection, and what each action records.
               </p>
               <button class="primary lime" @click="go('learn')">
-                Your five-minute guide <Icon :size="18" /></button
+                Open the guide <Icon :size="18" /></button
               ><span class="card-diagonal" aria-hidden="true">&#8599;</span>
             </aside>
           </div>
@@ -669,29 +668,29 @@ async function setQuest(q) {
             aria-label="More ways to participate"
           >
             <div class="route-intro">
-              <span class="eyebrow">KEEP THINGS MOVING</span>
-              <h2>There is more<br /> than one way in.</h2>
+              <span class="eyebrow">WORKSPACES</span>
+              <h2>More activity.</h2>
             </div>
             <button class="route-item" @click="go('stake')">
               <span class="route-top"
                 ><span class="tiny-label">02 / TOKEN DETAILS</span
                 ><Icon name="external" :size="22" /></span
-              ><strong>Plan token features.</strong>
-              <p>Locking and rewards wait for a verified mint and clear terms.</p>
+              ><strong>Token status.</strong>
+              <p>No mint is configured; token actions are unavailable.</p>
             </button>
             <button class="route-item" @click="go('governance')">
               <span class="route-top"
                 ><span class="tiny-label">03 / COORDINATE</span
                 ><Icon name="external" :size="22" /></span
-              ><strong>Bring an idea.</strong>
-              <p>Help decide where we go next.</p>
+              ><strong>Proposals.</strong>
+              <p>Create or vote on an advisory proposal.</p>
             </button>
             <button class="route-item" @click="go('treasury')">
               <span class="route-top"
                 ><span class="tiny-label">04 / VERIFY</span
                 ><Icon name="external" :size="22" /></span
-              ><strong>See the whole.</strong>
-              <p>Shared resources. Open records.</p>
+              ><strong>Treasury reads.</strong>
+              <p>Review public balances and available records.</p>
             </button>
           </section>
         </section>
@@ -841,8 +840,8 @@ async function setQuest(q) {
                 </div>
                 <div class="quest-action">
                   <div class="quest-reward">
-                    <span>{{ q.sample ? "Reward / example" : "Reward" }}</span>
-                    <strong v-if="q.sample">{{ units(q.reward) }} <small>{{ tokenSymbol }}</small></strong>
+                    <span>{{ q.sample ? "Sample content" : "Reward" }}</span>
+                    <strong v-if="q.sample">Preview only</strong>
                     <strong v-else>No token reward</strong>
                   </div>
                   <button
@@ -906,7 +905,7 @@ async function setQuest(q) {
                     v-model="adminTitle"
                     maxlength="80"
                     required
-                    placeholder="Welcome to Solvyrra" /></label
+                    placeholder="Welcome to the community" /></label
                 ><label>Quest details<textarea
                     v-model="adminDetails"
                     maxlength="240"
@@ -1162,7 +1161,7 @@ async function setQuest(q) {
                   {{
                     readError
                       ? "Use Try again above to reconnect."
-                      : "Start the first Solvyrra proposal with a clear idea and a voting period."
+                      : "Start the first community proposal with a clear idea and a voting period."
                   }}
                 </p>
                 <button
@@ -1285,9 +1284,9 @@ async function setQuest(q) {
                   <span class="eyebrow">TREASURY BALANCE</span
                   ><Icon name="treasury" :size="24" />
                 </div>
-                <strong
+                    <strong
                 >{{ ready && treasuryTokenKnown ? units(treasuryBalance) : "--"
-                  }}<small>{{ tokenSymbol }}</small></strong
+                  }}<small v-if="mintConfigured">{{ tokenSymbol }}</small></strong
                 ><span>{{ tokenIdentity }}</span>
                 <div class="treasury-gas">
                   <Icon name="wallet" :size="19" /><span
@@ -1319,7 +1318,7 @@ async function setQuest(q) {
                     <dd>{{ tokenIdentity }}</dd>
                   </div>
                   <div>
-                    <dt>Total issued {{ tokenSymbol }}</dt>
+                    <dt>{{ mintConfigured ? `Total issued ${tokenSymbol}` : "Issued supply" }}</dt>
                     <dd>{{ mintConfigured && ready ? units(totalSupply) : "--" }}</dd>
                   </div>
                   <div>
@@ -1327,7 +1326,7 @@ async function setQuest(q) {
                     <dd>Not implemented</dd>
                   </div>
                   <div>
-                    <dt>Your {{ tokenSymbol }} balance</dt>
+                    <dt>{{ mintConfigured ? `Your ${tokenSymbol} balance` : "Your token balance" }}</dt>
                     <dd>
                       {{
                         connected && accountReady
@@ -1379,8 +1378,8 @@ async function setQuest(q) {
                   </div>
                 </dl>
                 <p class="fine-print">
-                  Solvyrra is the app brand.
-                  {{ mintConfigured ? `Decimals are read from the mint (${tokenDecimals}); display name and ticker metadata are pending.` : "No token mint is deployed or configured. SVYR is only a preview label." }}
+                  Solstir is the app brand.
+                  {{ mintConfigured ? `Decimals are read from the mint (${tokenDecimals}); display name and ticker metadata are pending.` : "No token mint is deployed or configured." }}
                 </p>
               </article>
             </div>
@@ -1428,7 +1427,7 @@ async function setQuest(q) {
         <section v-if="tab === 'learn'" class="page learn">
           <div class="page-head">
             <div>
-              <span class="eyebrow">THE SOLVYRRA FIELD GUIDE</span>
+                  <span class="eyebrow">THE SOLSTIR FIELD GUIDE</span>
               <h1>A way in.<br /><em>A way forward.</em></h1>
               <p>
                 A few things to know before your first contribution. Follow the
@@ -1572,27 +1571,28 @@ async function setQuest(q) {
               </details>
               <details>
                 <summary>
-                  Why is the token name different from Solvyrra?
+                  Why is the token name different from Solstir?
                 </summary>
                 <p>
                   The future mint will define the token name, symbol and decimals.
-                  Solvyrra is the application brand, while SVYR is only a preview
-                  label today. Current token details: {{ tokenIdentity }}.
+                  Solstir is the application brand. A token name and symbol will
+                  appear after a mint is supplied and verified. Current status:
+                  {{ tokenIdentity }}.
                 </p>
               </details>
               <details>
-                <summary>Is a Solvyrra token deployed?</summary>
+                <summary>Is a Solstir token deployed?</summary>
                 <p>
-                  No Solvyrra token mint is configured. SVYR is a preview label
-                  only; the community program does not create or distribute a
-                  token. A mint's name, symbol, decimals, and address will be
+                  No Solstir token mint is configured. The community program
+                  does not create or distribute a token. A mint's name, symbol,
+                  decimals, and address will be
                   shown after they are provided and verified.
                 </p>
               </details>
               <details>
-                <summary>Is Solvyrra an official Solana product?</summary>
+                <summary>Is Solstir an official Solana product?</summary>
                 <p>
-                  No. Solvyrra is an independent community project currently
+                  No. Solstir is an independent community project currently
                   configured for {{ SOLANA_NETWORK_NAME }}. It is not affiliated
                   with the Solana Foundation.
                 </p>
@@ -1614,7 +1614,7 @@ async function setQuest(q) {
         </section>
       </main>
             <footer>
-        <span>2026 Solvyrra <span class="footer-separator">/</span> Route value on-chain.</span>
+        <span>2026 Solstir <span class="footer-separator">/</span> On-chain, together.</span>
         <span>Independent community project <span class="footer-dot"></span> {{ SOLANA_NETWORK_NAME }}</span>
       </footer>
     </div>

@@ -1,9 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
-  <title>Solvyrra - Proof Gate mark</title>
-  <desc>A gate silhouette with a route-shaped cutout and a proof node.</desc>
-  <g stroke-linecap="square" stroke-linejoin="miter">
-    <polygon points="40,12 88,12 116,40 116,88 88,116 40,116 12,88 12,40" fill="#586bff"/>
-    <path d="M91 38 L47 38 L34 51 L47 64 L81 64 L94 77 L81 90 L38 90" fill="none" stroke="#f3f8f3" stroke-width="13"/>
-    <circle cx="94" cy="77" r="6" fill="#ff7a59"/>
-  </g>
-</svg>

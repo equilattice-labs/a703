@@ -1,8 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
   <title>Solstir signal mark</title>
   <desc>Eight rounded signal rays around a shared center point.</desc>
-  <rect width="128" height="128" rx="12" fill="#101514"/>
-  <g transform="translate(10.24 10.24) scale(.84)" stroke="#b8ef67" stroke-width="11" stroke-linecap="round">
+  <g stroke="#a991ff" stroke-width="11" stroke-linecap="round">
     <path d="M64 10 L64 35"/>
     <path d="M64 93 L64 118"/>
     <path d="M10 64 L35 64"/>
@@ -11,6 +10,6 @@
     <path d="M85 85 L103 103"/>
     <path d="M103 25 L85 43"/>
     <path d="M43 85 L25 103"/>
-    <circle cx="64" cy="64" r="10" fill="#a991ff" stroke="#101514" stroke-width="4"/>
+    <circle cx="64" cy="64" r="10" fill="#ff9563" stroke="#f1f5ef" stroke-width="4"/>
   </g>
 </svg>
